@@ -10,13 +10,13 @@ With ScrapyardPlus you can:
 * get discounts for bulk orders and your current standing with the owner of the scrapyard
 
 ## Installation
-1. insert the following code:  
+1. download extract the [mod](https://github.com/ctcDNightmare/avorion-scrapyardplus/files/1301082/ScrapyardPlus-1.0.0.zip) into your avorion folder
+
+2. insert the following code:  
 ``
 require("mods/ScrapyardPlus/scripts/entity/merchants/scrapyard") -- DNightmare/ScrapyardPlus
 ``  
-at the end of the original scrapyard file:  
+at the very end of the original scrapyard file:  
 ``data/scripts/entity/merchants/scrapyard.lua``
-
-2. extract the mod into your avorion folder
 
 3. done
