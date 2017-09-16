@@ -1,8 +1,9 @@
 local ScrapyardPlusConfig = {}
 
-ScrapyardPlusConfig.version = "[0.1.0]"
-ScrapyardPlusConfig.ModName = "[ScrapyardPlus]"
-ScrapyardPlusConfig.AllowLifetime = false
-ScrapyardPlusConfig.AlliancePriceFactor = 1.5
+ScrapyardPlusConfig.version = "[1.1.0]"
+ScrapyardPlusConfig.modName = "[ScrapyardPlus]"
+ScrapyardPlusConfig.allowLifetime = true
+ScrapyardPlusConfig.lifetimeLevelFactor = 1.0
+ScrapyardPlusConfig.alliancePriceFactor = 5.0
 
 return ScrapyardPlusConfig
