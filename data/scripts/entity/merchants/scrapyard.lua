@@ -458,20 +458,5 @@ end
 
 
 -- DNightmare/ScrapyardPlus START
-if pcall(require, "mods/ScrapyardPlus/scripts/entity/merchants/scrapyard") then
-    -- tables get passed by-reference that's why we wrap everything here inside a table
-    Scrapyard.injectParent({
-        licenses=licenses,
-        illegalActions=illegalActions,
-        newsBroadcastCounter=newsBroadcastCounter,
-        tabbedWindow=tabbedWindow,
-        planDisplayer=planDisplayer,
-        sellButton=sellButton,
-        sellWarningLabel=sellWarningLabel,
-        licenseDuration=licenseDuration,
-        uiMoneyValue=uiMoneyValue,
-        visible=visible,
-        Dialog=Dialog
-    })
-end
+if not pcall(require, "mods/ScrapyardPlus/scripts/entity/merchants/scrapyard") then print("Failed to load ScrapyardPlus") end
 -- DNightmare/ScrapyardPlus END
