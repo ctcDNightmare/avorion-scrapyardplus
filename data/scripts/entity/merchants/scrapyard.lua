@@ -455,8 +455,6 @@ function Scrapyard.unallowedDamaging(shooter, faction, damage)
 
 end
 
-
-
 -- DNightmare/ScrapyardPlus START
 if not pcall(require, "mods/ScrapyardPlus/scripts/entity/merchants/scrapyard") then print("Failed to load ScrapyardPlus") end
 -- DNightmare/ScrapyardPlus END

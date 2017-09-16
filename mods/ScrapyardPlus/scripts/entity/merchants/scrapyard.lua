@@ -90,6 +90,46 @@ function Scrapyard.onShowWindow()
     visible = true
 end
 
+function Scrapyard.sellCraft()
+    local buyer, ship, player = getInteractingFaction(callingPlayer, AlliancePrivilege.ModifyCrafts, AlliancePrivilege.SpendResources)
+    if not buyer then return end
+
+    -- don't allow selling drones, would be an infinite income source
+    if ship.isDrone then return end
+
+    -- Create Wreckage
+    local position = ship.position
+    local plan = ship:getPlan();
+
+    -- remove the old craft
+    Sector():deleteEntity(ship)
+
+    -- create a wreckage in its place
+    local wreckageIndex = Sector():createWreckage(plan, position)
+
+    local moneyValue = Scrapyard.getShipValue(plan)
+    buyer:receive(moneyValue)
+
+    invokeClientFunction(player, "transactionComplete")
+end
+
+function Scrapyard.getShipValue(plan)
+    local sum = plan:getMoneyValue()
+    local resourceValue = {plan:getResourceValue()}
+
+    for i, v in pairs (resourceValue) do
+        sum = sum + Material(i - 1).costFactor * v * 10;
+    end
+
+    -- players only get money, and not even the full value.
+    -- This is to avoid exploiting the scrapyard functionality by buying and then selling ships
+    return sum * 0.75
+end
+
+function Scrapyard.transactionComplete()
+    ScriptUI():stopInteraction()
+end
+
 function Scrapyard.onHullHit(objectIndex, block, shootingCraftIndex, damage, position)
     local object = Entity(objectIndex)
     if object and object.isWreckage then
