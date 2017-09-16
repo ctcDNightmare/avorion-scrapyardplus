@@ -11,17 +11,13 @@ local Dialog = require("dialogutility")
 Scrapyard = {}
 
 local basePath = "mods/ScrapyardPlus/"
-
--- helpers
-function NicerNumbers(n) -- http://lua-users.org/wiki/FormattingNumbers // credit http://richard.warburton.it
-    local left, num, right = string.match(n, '^([^%d]*%d)(%d*)(.-)$')
-    return left .. (num:reverse():gsub('(%d%d%d)', '%1.'):reverse()) .. right
-end
+exsist, ScrapyardPlusConfig = pcall(require, basePath .. '/config/ScrapyardPlusConfig')
+exsist, ScrapyardPlus = pcall(require, basePath .. '/scripts/lib/ScrapyardPlus')
 
 -- constants
 local typeAlliance = 'ALLIANCE'
 local typeSolo = 'SOLO'
-local allianceModifier = 5
+local alliancePriceFactor = ScrapyardPlusConfig.alliancePriceFactor or 5
 
 -- server
 local licenses
@@ -64,40 +60,6 @@ function Scrapyard.secure()
     data.illegalActions = illegalActions
 
     return data
-end
-
-function Scrapyard.initUI()
-
-    local res = getResolution()
-    local size = vec2(700, 650)
-
-    local menu = ScriptUI()
-    local mainWindow = menu:createWindow(Rect(res * 0.5 - size * 0.5, res * 0.5 + size * 0.5))
-    menu:registerWindow(mainWindow, "Scrapyard" % _t)
-    mainWindow.caption = "Scrapyard" % _t
-    mainWindow.showCloseButton = 1
-    mainWindow.moveable = 1
-
-    -- create a tabbed window inside the main window
-    tabbedWindow = mainWindow:createTabbedWindow(Rect(vec2(10, 10), size - 10))
-
-    -- create a "Sell" tab inside the tabbed window
-    local sellTab = tabbedWindow:createTab("Sell Ship" % _t, "", "Sell your ship to the scrapyard" % _t)
-    size = sellTab.size
-
-    planDisplayer = sellTab:createPlanDisplayer(Rect(0, 0, size.x - 20, size.y - 60))
-    planDisplayer.showStats = 0
-
-    sellButton = sellTab:createButton(Rect(0, size.y - 40, 150, size.y), "Sell Ship" % _t, "onSellButtonPressed")
-    sellWarningLabel = sellTab:createLabel(vec2(200, size.y - 30), "Warning! You will not get refunds for crews or turrets!" % _t, 15)
-    sellWarningLabel.color = ColorRGB(1, 1, 0)
-
-    Scrapyard.createSoloTab()
-
-    if Player().allianceIndex then
-        Scrapyard.createAllianceTab()
-    end
-
 end
 
 function Scrapyard.renderUI()
@@ -208,6 +170,40 @@ function Scrapyard.unallowedDamaging(shooter, faction, damage)
 end
 
 -- modded vanilla functions
+function Scrapyard.initUI()
+
+    local res = getResolution()
+    local size = vec2(700, 650)
+
+    local menu = ScriptUI()
+    local mainWindow = menu:createWindow(Rect(res * 0.5 - size * 0.5, res * 0.5 + size * 0.5))
+    menu:registerWindow(mainWindow, "Scrapyard" % _t)
+    mainWindow.caption = "Scrapyard" % _t
+    mainWindow.showCloseButton = 1
+    mainWindow.moveable = 1
+
+    -- create a tabbed window inside the main window
+    tabbedWindow = mainWindow:createTabbedWindow(Rect(vec2(10, 10), size - 10))
+
+    -- create a "Sell" tab inside the tabbed window
+    local sellTab = tabbedWindow:createTab("Sell Ship" % _t, "", "Sell your ship to the scrapyard" % _t)
+    size = sellTab.size
+
+    planDisplayer = sellTab:createPlanDisplayer(Rect(0, 0, size.x - 20, size.y - 60))
+    planDisplayer.showStats = 0
+
+    sellButton = sellTab:createButton(Rect(0, size.y - 40, 150, size.y), "Sell Ship" % _t, "onSellButtonPressed")
+    sellWarningLabel = sellTab:createLabel(vec2(200, size.y - 30), "Warning! You will not get refunds for crews or turrets!" % _t, 15)
+    sellWarningLabel.color = ColorRGB(1, 1, 0)
+
+    Scrapyard.createSoloTab()
+
+    if Player().allianceIndex then
+        Scrapyard.createAllianceTab()
+    end
+
+end
+
 function Scrapyard.updatePrice(slider)
     for i, group in pairs(uiGroups) do
         if group.durationSlider.index == slider.index then
@@ -217,10 +213,10 @@ function Scrapyard.updatePrice(slider)
             end
 
             local base, reputation, bulk, total = Scrapyard.getLicensePrice(buyer, slider.value, group.type)
-            group.basePricelabel.caption = "$${money}" % _t % { money = NicerNumbers(base) }
-            group.reputationDiscountlabel.caption = "$${money}" % _t % { money = NicerNumbers(reputation) }
-            group.bulkDiscountlabel.caption = "$${money}" % _t % { money = NicerNumbers(bulk) }
-            group.totalPricelabel.caption = "$${money}" % _t % { money = NicerNumbers(total) }
+            group.basePricelabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(base) }
+            group.reputationDiscountlabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(reputation) }
+            group.bulkDiscountlabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(bulk) }
+            group.totalPricelabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(total) }
 
             group.licenseDurationlabel.caption = "${time}" % _t % { time = createReadableTimeString(group.durationSlider.value * 60) }
         end
@@ -262,7 +258,7 @@ end
 function Scrapyard.getLicensePrice(orderingFaction, minutes, type)
     local basePrice = round(minutes * 150 * (1.0 + GetFee(Faction(), orderingFaction)) * Balancing_GetSectorRichnessFactor(Sector():getCoordinates()))
     if type == typeAlliance then
-        basePrice = round(allianceModifier * minutes * 150 * (1.0 + GetFee(Faction(), orderingFaction)) * Balancing_GetSectorRichnessFactor(Sector():getCoordinates()))
+        basePrice = round(alliancePriceFactor * minutes * 150 * (1.0 + GetFee(Faction(), orderingFaction)) * Balancing_GetSectorRichnessFactor(Sector():getCoordinates()))
     end
 
     local currentReputation = orderingFaction:getRelations(Faction().index)
@@ -486,19 +482,19 @@ function Scrapyard.initSoloTab(durationSlider, licenseDurationlabel, basePricela
 
     basePricelabel.setTopRightAligned(basePricelabel)
     basePricelabel.width = 250
-    basePricelabel.caption = "$${money}" % _t % { money = NicerNumbers(base) }
+    basePricelabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(base) }
 
     reputationDiscountlabel.setTopRightAligned(reputationDiscountlabel)
     reputationDiscountlabel.width = 250
-    reputationDiscountlabel.caption = "$${money}" % _t % { money = NicerNumbers(reputation) }
+    reputationDiscountlabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(reputation) }
 
     bulkDiscountlabel.setTopRightAligned(bulkDiscountlabel)
     bulkDiscountlabel.width = 250
-    bulkDiscountlabel.caption = "$${money}" % _t % { money = NicerNumbers(bulk) }
+    bulkDiscountlabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(bulk) }
 
     totalPricelabel.setTopRightAligned(totalPricelabel)
     totalPricelabel.width = 250
-    totalPricelabel.caption = "$${money}" % _t % { money = NicerNumbers(total) }
+    totalPricelabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(total) }
 
     currentSoloLicenseDurationLabel.setTopRightAligned(currentSoloLicenseDurationLabel)
     currentSoloLicenseDurationLabel.width = 350
@@ -575,19 +571,19 @@ function Scrapyard.initAllianceTab(durationSlider, licenseDurationlabel, basePri
 
     basePricelabel.setTopRightAligned(basePricelabel)
     basePricelabel.width = 250
-    basePricelabel.caption = "$${money}" % _t % { money = NicerNumbers(base) }
+    basePricelabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(base) }
 
     reputationDiscountlabel.setTopRightAligned(reputationDiscountlabel)
     reputationDiscountlabel.width = 250
-    reputationDiscountlabel.caption = "$${money}" % _t % { money = NicerNumbers(reputation) }
+    reputationDiscountlabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(reputation) }
 
     bulkDiscountlabel.setTopRightAligned(bulkDiscountlabel)
     bulkDiscountlabel.width = 250
-    bulkDiscountlabel.caption = "$${money}" % _t % { money = NicerNumbers(bulk) }
+    bulkDiscountlabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(bulk) }
 
     totalPricelabel.setTopRightAligned(totalPricelabel)
     totalPricelabel.width = 250
-    totalPricelabel.caption = "$${money}" % _t % { money = NicerNumbers(total) }
+    totalPricelabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(total) }
 
     currentAllianceLicenseDurationLabel.setTopRightAligned(currentAllianceLicenseDurationLabel)
     currentAllianceLicenseDurationLabel.width = 350
