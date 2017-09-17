@@ -17,29 +17,30 @@ exsist, ScrapyardPlus = pcall(require, basePath .. '/scripts/lib/ScrapyardPlus')
 -- constants
 local typeAlliance = 'ALLIANCE'
 local typeSolo = 'SOLO'
-local alliancePriceFactor = ScrapyardPlusConfig.alliancePriceFactor or 5
+local alliancePriceFactor = ScrapyardPlusConfig.alliancePriceFactor or 4.5
+local pricePerMinute = ScrapyardPlusConfig.pricePerMinute or 175
 
 -- server
 local licenses
 local illegalActions
-local newsBroadcastCounter
+local newsBroadcastCounter = 0
 
 -- client
-local tabbedWindow
-local planDisplayer
-local sellButton
-local sellWarningLabel
-local uiMoneyValue
-local visible
+local tabbedWindow = 0
+local planDisplayer = 0
+local sellButton = 0
+local sellWarningLabel = 0
+local uiMoneyValue = 0
+local visible = false
 local uiGroups = {}
 
 -- solo license
-local currentSoloLicenseDurationLabel
-local maxSoloLicenseDurationLabel
+local currentSoloLicenseDurationLabel = 0
+local maxSoloLicenseDurationLabel = 0
 local soloLicenseDuration = 0
 -- alliance license
-local currentAllianceLicenseDurationLabel
-local maxAllianceLicenseDurationLabel
+local currentAllianceLicenseDurationLabel = 0
+local maxAllianceLicenseDurationLabel = 0
 local allianceLicenseDuration = 0
 
 -- untouched vanilla functions
@@ -60,6 +61,25 @@ function Scrapyard.secure()
     data.illegalActions = illegalActions
 
     return data
+end
+
+function Scrapyard.initialize()
+
+    if onServer() then
+        Sector():registerCallback("onHullHit", "onHullHit")
+
+        local station = Entity()
+        if station.title == "" then
+            station.title = "Scrapyard"%_t
+        end
+
+    end
+
+    if onClient() and EntityIcon().icon == "" then
+        EntityIcon().icon = "data/textures/icons/pixel/scrapyard_fat.png"
+        InteractionText().text = Dialog.generateStationInteractionText(Entity(), random())
+    end
+
 end
 
 function Scrapyard.renderUI()
@@ -88,6 +108,10 @@ function Scrapyard.onShowWindow()
     Scrapyard.getLicenseDuration()
 
     visible = true
+end
+
+function Scrapyard.getLicenseDuration()
+    invokeServerFunction("sendLicenseDuration")
 end
 
 function Scrapyard.sellCraft()
@@ -128,19 +152,6 @@ end
 
 function Scrapyard.transactionComplete()
     ScriptUI():stopInteraction()
-end
-
-function Scrapyard.onHullHit(objectIndex, block, shootingCraftIndex, damage, position)
-    local object = Entity(objectIndex)
-    if object and object.isWreckage then
-        local shooter = Entity(shootingCraftIndex)
-        if shooter then
-            local faction = Faction(shooter.factionIndex)
-            if not faction.isAIFaction and licenses[faction.index] == nil then
-                Scrapyard.unallowedDamaging(shooter, faction, damage)
-            end
-        end
-    end
 end
 
 function Scrapyard.unallowedDamaging(shooter, faction, damage)
@@ -264,29 +275,30 @@ function Scrapyard.updatePrice(slider)
 end
 
 function Scrapyard.updateClient(timeStep)
-    if soloLicenseDuration then
-        soloLicenseDuration = soloLicenseDuration - timeStep
+    local hasAlliance = false
+    if Player().allianceIndex then
+        hasAlliance = true
     end
+    soloLicenseDuration = soloLicenseDuration - timeStep
 
-    if allianceLicenseDuration then
+    if hasAlliance then
         allianceLicenseDuration = allianceLicenseDuration - timeStep
     end
 
     if visible then
-        if currentSoloLicenseDurationLabel then
-            if soloLicenseDuration > 0 then
-                currentSoloLicenseDurationLabel.caption = "${time}" % _t % { time = createReadableTimeString(soloLicenseDuration) }
-            else
-                currentSoloLicenseDurationLabel.caption = "No license found." % _t
-            end
+        if soloLicenseDuration > 0 then
+            currentSoloLicenseDurationLabel.caption = "${time}" % _t % { time = createReadableTimeString(soloLicenseDuration) }
+        else
+            currentSoloLicenseDurationLabel.caption = "No license found." % _t
         end
-        if currentAllianceLicenseDurationLabel then
+        if hasAlliance then
             if allianceLicenseDuration > 0 then
                 currentAllianceLicenseDurationLabel.caption = "${time}" % _t % { time = createReadableTimeString(allianceLicenseDuration) }
             else
                 currentAllianceLicenseDurationLabel.caption = "No license found." % _t
             end
         end
+
     end
 end
 
@@ -296,13 +308,16 @@ function Scrapyard.setLicenseDuration(soloDuration, allianceDuration)
 end
 
 function Scrapyard.getLicensePrice(orderingFaction, minutes, type)
-    local basePrice = round(minutes * 150 * (1.0 + GetFee(Faction(), orderingFaction)) * Balancing_GetSectorRichnessFactor(Sector():getCoordinates()))
+    local basePrice = round(minutes * pricePerMinute * Balancing_GetSectorRichnessFactor(Sector():getCoordinates()))
     if type == typeAlliance then
-        basePrice = round(alliancePriceFactor * minutes * 150 * (1.0 + GetFee(Faction(), orderingFaction)) * Balancing_GetSectorRichnessFactor(Sector():getCoordinates()))
+        basePrice = round(alliancePriceFactor * basePrice)
     end
 
     local currentReputation = orderingFaction:getRelations(Faction().index)
     local reputationDiscountFactor = math.floor(currentReputation / 10000 + 1) * 0.01
+    if type == typeAlliance then
+        reputationDiscountFactor = reputationDiscountFactor * 0.85 -- alliance reputation is easier to obtain so less discount
+    end
     local reputationDiscount = round(basePrice * reputationDiscountFactor);
 
     local bulkDiscountFactor = 0
@@ -340,40 +355,40 @@ function Scrapyard.updateServer(timeStep)
     end
 
     for factionIndex, time in pairs(licenses) do
-
-        time = time - timeStep
-
         local faction = Faction(factionIndex)
-    
+        local x,y = Sector():getCoordinates()
         local licenseText = 'alliance salvaging license'
         if faction.isPlayer then
             licenseText = 'salvaging license'
         end
-        
-        if time + 1 > 10 and time <= 10 then
-            Scrapyard.notifyFaction(factionIndex, 0, string.format("Your %s license will run out in 10 seconds." % _t, licenseText), station.title)
-            Scrapyard.notifyFaction(factionIndex, 2, string.format("Your %s license will run out in 10 seconds." % _t, licenseText), station.title)
-        end
 
-        if time + 1 > 30 and time <= 30 then
-            Scrapyard.notifyFaction(factionIndex, 0, string.format("Your %s will run out in 30 seconds. Renew it and save yourself some trouble!" % _t, licenseText), station.title)
-        end
+        -- only check if a full second has passed
+        if round(time) ~= round(time - timeStep) then
+            if time > 10 and time - 1 <= 10 then
+                Scrapyard.notifyFaction(factionIndex, 0, string.format("\\s(%i:%i) Your %s license will run out in 10 seconds." % _t, x, y, licenseText), station.title)
+                Scrapyard.notifyFaction(factionIndex, 2, string.format("Your %s license will run out in 10 seconds." % _t, licenseText), station.title)
+            end
 
-        if time + 1 > 120 and time <= 120 then
-            Scrapyard.notifyFaction(factionIndex, 0, string.format("Your %s will run out in 2 Minutes. Renew it NOW and save yourself some trouble!" % _t, licenseText), station.title)
-        end
+            if time > 30 and time - 1 <= 30 then
+                Scrapyard.notifyFaction(factionIndex, 0, string.format("\\s(%i:%i) Your %s will run out in 30 seconds. Renew it NOW and save yourself some trouble!" % _t, x, y, licenseText), station.title)
+            end
 
-        if time + 1 > 300 and time <= 300 then
-            Scrapyard.notifyFaction(factionIndex, 0, string.format("Your %s will run out in 5 Minutes. Renew it NOW and save yourself some trouble!" % _t, licenseText), station.title)
-        end
+            if time > 120 and time - 1 <= 120 then
+                Scrapyard.notifyFaction(factionIndex, 0, string.format("\\s(%i:%i) Your %s will run out in 2 Minutes. Renew it and save yourself some trouble!" % _t, x, y, licenseText), station.title)
+            end
 
-        if time + 1 > 600 and time <= 600 then
-            Scrapyard.notifyFaction(factionIndex, 0, string.format("Your %s will run out in 10 minutes. Renew it immediately and save yourself some trouble!" % _t, licenseText), station.title)
-        end
+            if time > 300 and time - 1 <= 300 then
+                Scrapyard.notifyFaction(factionIndex, 0, string.format("\\s(%i:%i) Your %s will run out in 5 Minutes." % _t, x, y, licenseText), station.title)
+            end
 
+            if time > 600 and time - 1 <= 600 then
+                Scrapyard.notifyFaction(factionIndex, 0, string.format("\\s(%i:%i) Your %s will run out in 10 minutes." % _t, x, y, licenseText), station.title)
+            end
+        end
+        time = time - timeStep
         if time < 0 then
             licenses[factionIndex] = nil
-            Scrapyard.notifyFaction(factionIndex, 0, string.format("Your %s expired. You may no longer salvage in this area." % _t, licenseText), station.title)
+            Scrapyard.notifyFaction(factionIndex, 0, string.format("\\s(%i:%i) Your %s expired." % _t, x, y, licenseText), station.title)
         else
             licenses[factionIndex] = time
         end
@@ -381,7 +396,14 @@ function Scrapyard.updateServer(timeStep)
 end
 
 function Scrapyard.buyLicense(duration, type)
-    local buyer, _, player, alliance = getInteractingFaction(callingPlayer, AlliancePrivilege.SpendResources)
+    local buyer = Player(callingPlayer)
+    local player = Player(callingPlayer)
+    local ship
+
+    if type == typeAlliance then
+        buyer, ship, player = getInteractingFaction(callingPlayer, AlliancePrivilege.SpendResources)
+    end
+
     if not buyer then return end
     local station = Entity()
 
@@ -390,7 +412,6 @@ function Scrapyard.buyLicense(duration, type)
 
     -- check if we would go beyond maximum for current reputation level
     if ((currentDuration + duration) > maxDuration) then
-
         Scrapyard.notifyFaction(buyer.index, 0, string.format("Transaction would exceed maximum duration. Adjusting your order."), station.title)
         duration = round(maxDuration - currentDuration)
         -- minimum transaction = 5 minutes
@@ -419,9 +440,10 @@ function Scrapyard.buyLicense(duration, type)
     end
 
     -- send a message as response
+    local x,y = Sector():getCoordinates()
     local minutes = round(duration / 60)
-    Scrapyard.notifyFaction(buyer.index, 0, string.format("%s bought a %s minutes salvaging license extension for your alliance.", player.name, minutes), station.title)
-    Scrapyard.notifyFaction(buyer.index, 0, string.format("%s cannot be held reliable for any damage to ships or deaths caused by salvaging.", Faction().name), station.title)
+    Scrapyard.notifyFaction(buyer.index, 0, string.format("\\s(%i:%i) You bought a %i minutes salvaging license extension.", x, y, minutes), station.title)
+    Scrapyard.notifyFaction(player.index, 0, string.format("%s cannot be held reliable for any damage to ships or deaths caused by salvaging.", Faction().name), station.title)
 
     Scrapyard.sendLicenseDuration()
 end
@@ -441,6 +463,37 @@ function Scrapyard.sendLicenseDuration()
     end
 
     invokeClientFunction(player, "setLicenseDuration", soloDuration, allianceDuration)
+end
+
+function Scrapyard.onHullHit(objectIndex, block, shootingCraftIndex, damage, position)
+    local object = Entity(objectIndex)
+    if object and object.isWreckage then
+        local shooter = Entity(shootingCraftIndex)
+        if shooter then
+            local faction = Faction(shooter.factionIndex)
+            if not faction.isAIFaction then
+                local pilot
+
+                if faction.isAlliance then
+                    for _, playerIndex in pairs({shooter:getPilotIndices()}) do
+                        local player = Player(playerIndex)
+                        if player then
+                            pilot = player
+                            break -- we only need the main pilot of this ship
+                        end
+                    end
+                elseif faction.isPlayer then
+                    pilot = Player(faction.index)
+                end
+
+                if licenses[faction.index] == nil and -- check alliance license
+                        licenses[pilot.index] == nil -- check private license
+                then
+                    Scrapyard.unallowedDamaging(shooter, faction, damage)
+                end
+            end
+        end
+    end
 end
 
 -- ScrapyardPlus new functions
@@ -607,7 +660,7 @@ function Scrapyard.initAllianceTab(durationSlider, licenseDurationlabel, basePri
     licenseDurationlabel.width = size.x - 140
     licenseDurationlabel.centered = true
 
-    local base, reputation, bulk, total = Scrapyard.getLicensePrice(Player(), durationSlider.value)
+    local base, reputation, bulk, total = Scrapyard.getLicensePrice(Player(), durationSlider.value, typeAlliance)
 
     basePricelabel.setTopRightAligned(basePricelabel)
     basePricelabel.width = 250
@@ -656,16 +709,13 @@ function Scrapyard.notifyFaction(factionIndex, channel,  message, sender)
     
     local faction = Faction(factionIndex)
     if faction.isPlayer then
-        faction:sendChatMessage(sender, channel, message);
+        Player(factionIndex):sendChatMessage(sender, channel, message);
     else
         local onlinePlayers = {Server():getOnlinePlayers() }
         for _,player in pairs(onlinePlayers) do
-            if player.allianceIndex == allianceIndex then
+            if player.allianceIndex == factionIndex then
                 player:sendChatMessage(sender, channel, message);
             end
         end
     end
-    
-    
-    
 end
