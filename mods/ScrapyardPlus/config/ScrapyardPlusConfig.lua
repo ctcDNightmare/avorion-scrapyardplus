@@ -1,6 +1,6 @@
 local ScrapyardPlusConfig = {}
 
-ScrapyardPlusConfig.version = "[1.1.0]"
+ScrapyardPlusConfig.version = "[1.2.0]"
 ScrapyardPlusConfig.modName = "[ScrapyardPlus]"
 ScrapyardPlusConfig.allowLifetime = true
 ScrapyardPlusConfig.lifetimeLevelFactor = 1.0
