@@ -254,51 +254,102 @@ function Scrapyard.updateServer(timeStep)
         newsBroadcastCounter = 0
     end
 
-    -- counter for update, this is only executed once per second to save performance.
-    for playerIndex, actions in pairs(illegalActions) do
+    for factionIndex, actions in pairs(illegalActions) do
 
         actions = actions - 1
 
         if actions <= 0 then
-            illegalActions[playerIndex] = nil
+            illegalActions[factionIndex] = nil
         else
-            illegalActions[playerIndex] = actions
+            illegalActions[factionIndex] = actions
         end
     end
 
-    for playerIndex, time in pairs(licenses) do
+    for factionIndex, time in pairs(licenses) do
 
         time = time - timeStep
 
+        local faction = Faction(factionIndex)
+        local here = false
+        if faction.isAlliance then
+            faction = Alliance(factionIndex)
+        elseif faction.isPlayer then
+            faction = Player(factionIndex)
+
+            local px, py = faction:getSectorCoordinates()
+            local sx, sy = Sector():getCoordinates()
+
+            here = (px == sx and py == sy)
+        end
+
+        local doubleSend = false
+        local msg = nil
+
         -- warn player if his time is running out
         if time + 1 > 10 and time <= 10 then
-            Player(playerIndex):sendChatMessage(station.title, 0, "Your salvaging license will run out in 10 seconds."%_t);
-            Player(playerIndex):sendChatMessage(station.title, 2, "Your salvaging license will run out in 10 seconds."%_t);
+            if here then
+                msg = "Your salvaging license will run out in 10 seconds."%_t
+            else
+                msg = "Your salvaging license in %s will run out in 10 seconds."%_t
+            end
+
+            doubleSend = true
         end
 
         if time + 1 > 20 and time <= 20 then
-            Player(playerIndex):sendChatMessage(station.title, 0, "Your salvaging license will run out in 20 seconds."%_t);
-            Player(playerIndex):sendChatMessage(station.title, 2, "Your salvaging license will run out in 20 seconds."%_t);
+            if here then
+                msg = "Your salvaging license will run out in 20 seconds."%_t
+            else
+                msg = "Your salvaging license in %s will run out in 20 seconds."%_t
+            end
+
+            doubleSend = true
         end
 
         if time + 1 > 30 and time <= 30 then
-            Player(playerIndex):sendChatMessage(station.title, 0, "Your salvaging license will run out in 30 seconds. Renew it and save yourself some trouble!"%_t);
+            if here then
+                msg = "Your salvaging license will run out in 30 seconds. Renew it and save yourself some trouble!"%_t
+            else
+                msg = "Your salvaging license in %s will run out in 30 seconds. Renew it and save yourself some trouble!"%_t
+            end
         end
 
         if time + 1 > 60 and time <= 60 then
-            Player(playerIndex):sendChatMessage(station.title, 0, "Your salvaging license will run out in 60 seconds. Renew it NOW and save yourself some trouble!"%_t);
+            if here then
+                msg = "Your salvaging license will run out in 60 seconds. Renew it NOW and save yourself some trouble!"%_t
+            else
+                msg = "Your salvaging license in %s will run out in 60 seconds. Renew it NOW and save yourself some trouble!"%_t
+            end
         end
 
         if time + 1 > 120 and time <= 120 then
-            Player(playerIndex):sendChatMessage(station.title, 0, "Your salvaging license will run out in 2 minutes. Renew it immediately and save yourself some trouble!"%_t);
+            if here then
+                msg = "Your salvaging license will run out in 2 minutes. Renew it immediately and save yourself some trouble!"%_t
+            else
+                msg = "Your salvaging license in %s will run out in 2 minutes. Renew it immediately and save yourself some trouble!"%_t
+            end
         end
 
         if time < 0 then
-            licenses[playerIndex] = nil
+            licenses[factionIndex] = nil
 
-            Player(playerIndex):sendChatMessage(station.title, 0, "Your salvaging license expired. You may no longer salvage in this area."%_t);
+            if here then
+                msg = "Your salvaging license expired. You may no longer salvage in this area."%_t
+            else
+                msg = "Your salvaging license in %s expired. You may no longer salvage in this area."%_t
+            end
         else
-            licenses[playerIndex] = time
+            licenses[factionIndex] = time
+        end
+
+        if msg then
+            local x, y = Sector():getCoordinates()
+            local coordinates = "${x}:${y}" % {x = x, y = y}
+
+            faction:sendChatMessage(station.title, 0, msg, coordinates)
+            if doubleSend then
+                faction:sendChatMessage(station.title, 2, msg, coordinates)
+            end
         end
     end
 
@@ -369,7 +420,8 @@ function Scrapyard.buyLicense(duration)
 end
 
 function Scrapyard.sendLicenseDuration()
-    local duration = licenses[callingPlayer]
+    local owner, ship, player = getInteractingFaction(callingPlayer)
+    local duration = licenses[owner.index]
 
     if duration ~= nil then
         invokeClientFunction(Player(callingPlayer), "setLicenseDuration", duration)
@@ -455,6 +507,4 @@ function Scrapyard.unallowedDamaging(shooter, faction, damage)
 
 end
 
--- DNightmare/ScrapyardPlus START
-if not pcall(require, "mods/ScrapyardPlus/scripts/entity/merchants/scrapyard") then print("Failed to load ScrapyardPlus") end
--- DNightmare/ScrapyardPlus END
+if not pcall(require, "mods/ScrapyardPlus/scripts/entity/merchants/scrapyard") then print("Failed to load ScrapyardPlus") end -- DNightmare/ScrapyardPlus END
