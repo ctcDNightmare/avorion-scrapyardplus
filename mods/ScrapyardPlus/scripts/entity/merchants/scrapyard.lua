@@ -23,8 +23,6 @@ local requiredLibs = {}
 -- constants
 local typeAlliance = 'ALLIANCE'
 local typeSolo = 'SOLO'
-local alliancePriceFactor = modConfig.alliancePriceFactor or 4.5
-local pricePerMinute = modConfig.pricePerMinute or 175
 
 -- server
 local licenses
@@ -333,9 +331,9 @@ function Scrapyard.setLicenseDuration(soloDuration, allianceDuration)
 end
 
 function Scrapyard.getLicensePrice(orderingFaction, minutes, type)
-    local basePrice = round(minutes * pricePerMinute * Balancing_GetSectorRichnessFactor(Sector():getCoordinates()))
+    local basePrice = round(minutes * modConfig.pricePerMinute * Balancing_GetSectorRichnessFactor(Sector():getCoordinates()))
     if type == typeAlliance then
-        basePrice = round(alliancePriceFactor * basePrice)
+        basePrice = round(modConfig.alliancePriceFactor * basePrice)
     end
 
     local currentReputation = orderingFaction:getRelations(Faction().index)
@@ -713,6 +711,14 @@ function Scrapyard.createAllianceTab()
     -- Buy Now!
     local buyButton = allianceTab:createButton(Rect(size.x - 210, 275, size.x - 10, 325), "Buy License" % _t, "onBuyLicenseButtonPressed")
 
+    -- lifetime license (can be disabled in options)
+    local lifetimeStatusLabel
+    if modConfig.allowLifetime then
+        licenseTab:createLabel(vec2(15, size.y - 110), "Progress towards lifetime license:", fontSize)
+
+        lifetimeStatusLabel = licenseTab:createStatisticsBar(Rect(15, size.y - 80, size.x - 15, size.y - 65), ColorRGB(1, 1, 1))
+    end
+
     -- License Status
     allianceTab:createLine(vec2(15, size.y - 55), vec2(size.x - 15, size.y - 55))
 
@@ -722,7 +728,7 @@ function Scrapyard.createAllianceTab()
     allianceTab:createLabel(vec2(15, size.y - 25), "Maximum allowed duration:", fontSize)
     maxAllianceLicenseDurationLabel = allianceTab:createLabel(vec2(size.x - 360, size.y - 25), "", fontSize)
 
-    Scrapyard.initAllianceTab(durationSlider, licenseDurationlabel, basePricelabel, reputationDiscountlabel, bulkDiscountlabel, totalPricelabel, size)
+    Scrapyard.initAllianceTab(durationSlider, licenseDurationlabel, basePricelabel, reputationDiscountlabel, bulkDiscountlabel, totalPricelabel, lifetimeStatusLabel, size)
 
     -- Save UIGroup
     table.insert(uiGroups, {
@@ -769,6 +775,11 @@ function Scrapyard.initAllianceTab(durationSlider, licenseDurationlabel, basePri
     maxAllianceLicenseDurationLabel.caption = createReadableTimeString(Scrapyard.getMaxLicenseDuration(Player()))
     maxAllianceLicenseDurationLabel.setTopRightAligned(maxAllianceLicenseDurationLabel)
     maxAllianceLicenseDurationLabel.width = 350
+
+    if lifetimeStatusLabel then
+        lifetimeStatusLabel:setRange(0, modConfig.lifetimeTotalExperience)
+        lifetimeStatusLabel:setValue(0, "Reputation to low!", ColorRGB(0.25, 0.25, 0.25))
+    end
 end
 
 function Scrapyard.onBuyLicenseButtonPressed(button)
