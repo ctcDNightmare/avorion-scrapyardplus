@@ -1,5 +1,4 @@
 # ScrapyardPlus
-
 ___
 Your salvaging ops are longer then 60 minutes?  
 You want to get something in return for grinding all the precious reputation?  
@@ -12,13 +11,11 @@ With ScrapyardPlus you can:
 ## Installation
 1. download & extract the [mod](https://github.com/ctcDNightmare/avorion-scrapyardplus/releases) into your Avorion folder
 
-2. insert the following code:  
+2. insert the following code at the end of the original scrapyard file (``data/scripts/entity/merchants/scrapyard.lua``)
 ```Lua
 if not pcall(require, "mods/ScrapyardPlus/scripts/entity/merchants/scrapyard") then print("Failed to load ScrapyardPlus") end -- DNightmare/ScrapyardPlus
 ```  
-at the end of the original scrapyard file:  
-``data/scripts/entity/merchants/scrapyard.lua``  
-**(in case you are using the MoveUI-Mod as well, insert it above that!)**
+**In case you are using the MoveUI-Mod from Dirtyredz as well, insert it above that!**
  
 3. done
 
