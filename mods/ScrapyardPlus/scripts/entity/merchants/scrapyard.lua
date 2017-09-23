@@ -580,16 +580,22 @@ function Scrapyard.createSoloTab()
     licenseTab:createLabel(vec2(15, 185), "Bulk Discount", fontSize)
     local bulkDiscountlabel = licenseTab:createLabel(vec2(size.x - 260, 185), "", fontSize)
 
-    licenseTab:createLine(vec2(15, 215), vec2(size.x - 15, 215))
+    licenseTab:createLine(vec2(0, 215), vec2(size.x, 215))
 
     licenseTab:createLabel(vec2(15, 220), "Total", fontSize)
     local totalPricelabel = licenseTab:createLabel(vec2(size.x - 260, 220), "", fontSize)
 
     -- Buy Now!
-    local buyButton = licenseTab:createButton(Rect(size.x - 210, 275, size.x - 10, 325), "Buy License" % _t, "onBuyLicenseButtonPressed")
+    local buyButton = licenseTab:createButton(Rect(size.x - 210, 275, size.x - 15, 325), "Buy License" % _t, "onBuyLicenseButtonPressed")
+
+    -- lifetime
+    licenseTab:createLabel(vec2(15, size.y - 110), "Progress towards lifetime license:", fontSize)
+
+    local lifetimeStatusLabel = licenseTab:createStatisticsBar(Rect(15, size.y - 80, size.x - 15, size.y - 65), ColorRGB(1, 1, 1))
+
 
     -- License Status
-    licenseTab:createLine(vec2(15, size.y - 55), vec2(size.x - 15, size.y - 55))
+    licenseTab:createLine(vec2(0, size.y - 55), vec2(size.x, size.y - 55))
 
     licenseTab:createLabel(vec2(15, size.y - 50), "Current License expires in:", fontSize)
     currentSoloLicenseDurationLabel = licenseTab:createLabel(vec2(size.x - 360, size.y - 50), "", fontSize)
@@ -605,6 +611,7 @@ function Scrapyard.createSoloTab()
         reputationDiscountlabel,
         bulkDiscountlabel,
         totalPricelabel,
+        lifetimeStatusLabel,
         size
     )
 
@@ -617,11 +624,12 @@ function Scrapyard.createSoloTab()
         reputationDiscountlabel = reputationDiscountlabel,
         bulkDiscountlabel = bulkDiscountlabel,
         totalPricelabel = totalPricelabel,
+        lifetimeStatusLabel = lifetimeStatusLabel,
         buyButton = buyButton
     })
 end
 
-function Scrapyard.initSoloTab(durationSlider, licenseDurationlabel, basePricelabel, reputationDiscountlabel, bulkDiscountlabel, totalPricelabel, size)
+function Scrapyard.initSoloTab(durationSlider, licenseDurationlabel, basePricelabel, reputationDiscountlabel, bulkDiscountlabel, totalPricelabel, lifetimeStatusLabel, size)
     -- Init values & properties
     durationSlider.value = 5
     durationSlider.showValue = false
@@ -654,6 +662,9 @@ function Scrapyard.initSoloTab(durationSlider, licenseDurationlabel, basePricela
     maxSoloLicenseDurationLabel.caption = createReadableTimeString(Scrapyard.getMaxLicenseDuration(Player()))
     maxSoloLicenseDurationLabel.setTopRightAligned(maxSoloLicenseDurationLabel)
     maxSoloLicenseDurationLabel.width = 350
+
+    lifetimeStatusLabel:setRange(0,100000)
+    lifetimeStatusLabel:setValue(0, "reputation to low", ColorRGB(0.25, 0.25, 0.25))
 end
 
 function Scrapyard.createAllianceTab()
