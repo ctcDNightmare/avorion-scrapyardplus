@@ -10,15 +10,21 @@ local Dialog = require("dialogutility")
 -- namespace Scrapyard
 Scrapyard = {}
 
-local basePath = "mods/ScrapyardPlus/"
-exsist, ScrapyardPlusConfig = pcall(require, basePath .. '/config/ScrapyardPlusConfig')
-exsist, ScrapyardPlus = pcall(require, basePath .. '/scripts/lib/ScrapyardPlus')
+-- constants
+local MODULE = 'ScrapyardPlus' -- our module name
+local FS = '::' -- field separator
+
+-- general
+local libPath = "mods/ctccommon/scripts/lib"
+local basePath = "mods/" .. MODULE
+local modConfig = require(basePath .. '/config/' .. MODULE)
+local requiredLibs = {}
 
 -- constants
 local typeAlliance = 'ALLIANCE'
 local typeSolo = 'SOLO'
-local alliancePriceFactor = ScrapyardPlusConfig.alliancePriceFactor or 4.5
-local pricePerMinute = ScrapyardPlusConfig.pricePerMinute or 175
+local alliancePriceFactor = modConfig.alliancePriceFactor or 4.5
+local pricePerMinute = modConfig.pricePerMinute or 175
 
 -- server
 local licenses
@@ -61,25 +67,6 @@ function Scrapyard.secure()
     data.illegalActions = illegalActions
 
     return data
-end
-
-function Scrapyard.initialize()
-
-    if onServer() then
-        Sector():registerCallback("onHullHit", "onHullHit")
-
-        local station = Entity()
-        if station.title == "" then
-            station.title = "Scrapyard"%_t
-        end
-
-    end
-
-    if onClient() and EntityIcon().icon == "" then
-        EntityIcon().icon = "data/textures/icons/pixel/scrapyard_fat.png"
-        InteractionText().text = Dialog.generateStationInteractionText(Entity(), random())
-    end
-
 end
 
 function Scrapyard.renderUI()
@@ -233,6 +220,32 @@ function Scrapyard.unallowedDamaging(shooter, faction, damage)
 end
 
 -- modded vanilla functions
+function Scrapyard.initialize()
+
+    if onServer() then
+        -- load required common libs
+        for _,lib in pairs(requiredLibs) do
+            if not pcall(require, libPath .. lib) then
+                print('failed loading ' .. lib)
+            end
+        end
+
+        Sector():registerCallback("onHullHit", "onHullHit")
+
+        local station = Entity()
+        if station.title == "" then
+            station.title = "Scrapyard"%_t
+        end
+
+    end
+
+    if onClient() and EntityIcon().icon == "" then
+        EntityIcon().icon = "data/textures/icons/pixel/scrapyard_fat.png"
+        InteractionText().text = Dialog.generateStationInteractionText(Entity(), random())
+    end
+
+end
+
 function Scrapyard.initUI()
 
     local res = getResolution()
@@ -276,10 +289,10 @@ function Scrapyard.updatePrice(slider)
             end
 
             local base, reputation, bulk, total = Scrapyard.getLicensePrice(buyer, slider.value, group.type)
-            group.basePricelabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(base) }
-            group.reputationDiscountlabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(reputation) }
-            group.bulkDiscountlabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(bulk) }
-            group.totalPricelabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(total) }
+            group.basePricelabel.caption = "$${money}" % _t % { money = createMonetaryString(base) }
+            group.reputationDiscountlabel.caption = "$${money}" % _t % { money = createMonetaryString(reputation) }
+            group.bulkDiscountlabel.caption = "$${money}" % _t % { money = createMonetaryString(bulk) }
+            group.totalPricelabel.caption = "$${money}" % _t % { money = createMonetaryString(total) }
 
             group.licenseDurationlabel.caption = "${time}" % _t % { time = createReadableTimeString(group.durationSlider.value * 60) }
         end
@@ -588,18 +601,18 @@ function Scrapyard.createSoloTab()
     -- Buy Now!
     local buyButton = licenseTab:createButton(Rect(size.x - 210, 275, size.x - 15, 325), "Buy License" % _t, "onBuyLicenseButtonPressed")
 
-    -- lifetime
-    licenseTab:createLabel(vec2(15, size.y - 110), "Progress towards lifetime license:", fontSize)
+    -- lifetime license (can be disabled in options)
+    local lifetimeStatusLabel
+    if modConfig.allowLifetime then
+        licenseTab:createLabel(vec2(15, size.y - 110), "Progress towards lifetime license:", fontSize)
 
-    local lifetimeStatusLabel = licenseTab:createStatisticsBar(Rect(15, size.y - 80, size.x - 15, size.y - 65), ColorRGB(1, 1, 1))
-
+        lifetimeStatusLabel = licenseTab:createStatisticsBar(Rect(15, size.y - 80, size.x - 15, size.y - 65), ColorRGB(1, 1, 1))
+    end
 
     -- License Status
     licenseTab:createLine(vec2(0, size.y - 55), vec2(size.x, size.y - 55))
-
     licenseTab:createLabel(vec2(15, size.y - 50), "Current License expires in:", fontSize)
     currentSoloLicenseDurationLabel = licenseTab:createLabel(vec2(size.x - 360, size.y - 50), "", fontSize)
-
     licenseTab:createLabel(vec2(15, size.y - 25), "Maximum allowed duration:", fontSize)
     maxSoloLicenseDurationLabel = licenseTab:createLabel(vec2(size.x - 360, size.y - 25), "", fontSize)
 
@@ -642,19 +655,19 @@ function Scrapyard.initSoloTab(durationSlider, licenseDurationlabel, basePricela
 
     basePricelabel.setTopRightAligned(basePricelabel)
     basePricelabel.width = 250
-    basePricelabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(base) }
+    basePricelabel.caption = "$${money}" % _t % { money = createMonetaryString(base) }
 
     reputationDiscountlabel.setTopRightAligned(reputationDiscountlabel)
     reputationDiscountlabel.width = 250
-    reputationDiscountlabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(reputation) }
+    reputationDiscountlabel.caption = "$${money}" % _t % { money = createMonetaryString(reputation) }
 
     bulkDiscountlabel.setTopRightAligned(bulkDiscountlabel)
     bulkDiscountlabel.width = 250
-    bulkDiscountlabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(bulk) }
+    bulkDiscountlabel.caption = "$${money}" % _t % { money = createMonetaryString(bulk) }
 
     totalPricelabel.setTopRightAligned(totalPricelabel)
     totalPricelabel.width = 250
-    totalPricelabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(total) }
+    totalPricelabel.caption = "$${money}" % _t % { money = createMonetaryString(total) }
 
     currentSoloLicenseDurationLabel.setTopRightAligned(currentSoloLicenseDurationLabel)
     currentSoloLicenseDurationLabel.width = 350
@@ -663,8 +676,10 @@ function Scrapyard.initSoloTab(durationSlider, licenseDurationlabel, basePricela
     maxSoloLicenseDurationLabel.setTopRightAligned(maxSoloLicenseDurationLabel)
     maxSoloLicenseDurationLabel.width = 350
 
-    lifetimeStatusLabel:setRange(0,100000)
-    lifetimeStatusLabel:setValue(0, "reputation to low", ColorRGB(0.25, 0.25, 0.25))
+    if lifetimeStatusLabel then
+        lifetimeStatusLabel:setRange(0, modConfig.lifetimeTotalExperience)
+        lifetimeStatusLabel:setValue(0, "Reputation to low!", ColorRGB(0.25, 0.25, 0.25))
+    end
 end
 
 function Scrapyard.createAllianceTab()
@@ -734,19 +749,19 @@ function Scrapyard.initAllianceTab(durationSlider, licenseDurationlabel, basePri
 
     basePricelabel.setTopRightAligned(basePricelabel)
     basePricelabel.width = 250
-    basePricelabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(base) }
+    basePricelabel.caption = "$${money}" % _t % { money = createMonetaryString(base) }
 
     reputationDiscountlabel.setTopRightAligned(reputationDiscountlabel)
     reputationDiscountlabel.width = 250
-    reputationDiscountlabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(reputation) }
+    reputationDiscountlabel.caption = "$${money}" % _t % { money = createMonetaryString(reputation) }
 
     bulkDiscountlabel.setTopRightAligned(bulkDiscountlabel)
     bulkDiscountlabel.width = 250
-    bulkDiscountlabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(bulk) }
+    bulkDiscountlabel.caption = "$${money}" % _t % { money = createMonetaryString(bulk) }
 
     totalPricelabel.setTopRightAligned(totalPricelabel)
     totalPricelabel.width = 250
-    totalPricelabel.caption = "$${money}" % _t % { money = ScrapyardPlus.nicerNumbers(total) }
+    totalPricelabel.caption = "$${money}" % _t % { money = createMonetaryString(total) }
 
     currentAllianceLicenseDurationLabel.setTopRightAligned(currentAllianceLicenseDurationLabel)
     currentAllianceLicenseDurationLabel.width = 350
