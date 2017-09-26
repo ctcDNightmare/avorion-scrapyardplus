@@ -27,7 +27,11 @@ local typeSolo = 'SOLO'
 -- server
 local licenses
 local illegalActions
+local legalActions
 local newsBroadcastCounter = 0
+local highTrafficSystem = false
+local highTrafficTimer = 0
+local disasterTimer = 0
 
 -- client
 local tabbedWindow = 0
@@ -50,21 +54,6 @@ local allianceLicenseDuration = 0
 -- untouched vanilla functions
 function Scrapyard.interactionPossible(playerIndex, option)
     return CheckFactionInteraction(playerIndex, -10000)
-end
-
-function Scrapyard.restore(data)
-    -- clear earlier data
-    licenses = data.licenses
-    illegalActions = data.illegalActions
-end
-
-function Scrapyard.secure()
-    -- save licenses
-    local data = {}
-    data.licenses = licenses
-    data.illegalActions = illegalActions
-
-    return data
 end
 
 function Scrapyard.renderUI()
@@ -218,6 +207,25 @@ function Scrapyard.unallowedDamaging(shooter, faction, damage)
 end
 
 -- modded vanilla functions
+function Scrapyard.restore(data)
+    -- clear earlier data
+    licenses = data.licenses
+    illegalActions = data.illegalActions
+    legalActions = data.legalActions
+    highTrafficSystem = data.highTrafficSystem
+end
+
+function Scrapyard.secure()
+    -- save licenses
+    local data = {}
+    data.licenses = licenses
+    data.illegalActions = illegalActions
+    data.legalActions = legalActions
+    data.highTrafficSystem = highTrafficSystem
+
+    return data
+end
+
 function Scrapyard.initialize()
 
     if onServer() then
@@ -233,6 +241,12 @@ function Scrapyard.initialize()
         local station = Entity()
         if station.title == "" then
             station.title = "Scrapyard"%_t
+        end
+
+        local isHighTraffic = random()
+        if isHighTraffic <= modConfig.highTrafficChance then
+            highTrafficSystem = true
+            station.title = "High Traffic Scrapyard"%_t
         end
 
     end
@@ -402,6 +416,7 @@ function Scrapyard.buyLicense(duration, type)
     -- send a message as response
     local x,y = Sector():getCoordinates()
     local minutes = round(duration / 60)
+
     Scrapyard.notifyFaction(buyer.index, 0, string.format("\\s(%i:%i) You bought a %i minutes salvaging license extension.", x, y, minutes), station.title)
     Scrapyard.notifyFaction(player.index, 0, string.format("%s cannot be held reliable for any damage to ships or deaths caused by salvaging.", Faction().name), station.title)
 
@@ -450,6 +465,9 @@ function Scrapyard.onHullHit(objectIndex, block, shootingCraftIndex, damage, pos
                         licenses[pilot.index] == nil -- check private license
                 then
                     Scrapyard.unallowedDamaging(shooter, faction, damage)
+                else
+                    -- grant experience
+                    Scrapyard.allowedDamaging(faction)
                 end
             end
         end
@@ -460,10 +478,34 @@ function Scrapyard.updateServer(timeStep)
 
     local station = Entity();
 
+    -- local advertisement
     newsBroadcastCounter = newsBroadcastCounter + timeStep
-    if newsBroadcastCounter > 60 then
+    if newsBroadcastCounter > modConfig.advertisementTimer then
         Sector():broadcastChatMessage(station.title, 0, "Get a salvaging license now and try your luck with the wreckages!"%_t)
         newsBroadcastCounter = 0
+    end
+
+    -- we need more minerals
+    highTrafficTimer = highTrafficTimer + timeStep
+    if highTrafficTimer * 60 >= modConfig.highTrafficSpawntime then
+        -- spawn new ship
+        local station = Entity()
+        if station then
+            station.addScriptOnce(basePath .. '/scripts/events/ScrapyardPlus', 'high-traffic')
+        end
+        highTrafficTimer = 0
+    end
+
+    -- let's wreak some havoc
+    disasterTimer = disasterTimer + timeStep
+    if disasterTimer * 60 >= modConfig.disasterSpawnTime then
+        local areWeInTrouble = math.random()
+        local station = Entity()
+        -- maybe?!
+        if station and areWeInTrouble <= modConfig.disasterChance then
+            station.addScriptOnce(basePath .. '/scripts/events/ScrapyardPlus', 'disaster')
+        end
+        disasterTimer = 0
     end
 
     for factionIndex, actions in pairs(illegalActions) do
@@ -482,11 +524,18 @@ function Scrapyard.updateServer(timeStep)
         time = time - timeStep
 
         local faction = Faction(factionIndex)
+
+        if not faction then return end
+
         local here = false
+        local licenseType
+
         if faction.isAlliance then
             faction = Alliance(factionIndex)
+            licenseType = 'alliance'
         elseif faction.isPlayer then
             faction = Player(factionIndex)
+            licenseType = 'personal'
 
             local px, py = faction:getSectorCoordinates()
             local sx, sy = Sector():getCoordinates()
@@ -497,48 +546,37 @@ function Scrapyard.updateServer(timeStep)
         local doubleSend = false
         local msg
 
-        -- warn player if his time is running out
-        if time + 1 > 10 and time <= 10 then
+        -- warn player / alliance if time is running out
+        if time + 1 > modConfig.expirationTimeFinal and time <= modConfig.expirationTimeFinal then
             if here then
-                msg = "Your salvaging license will run out in 10 seconds."%_t
+                msg = "Your %s salvaging license will run out in %s."%_t
             else
-                msg = "Your salvaging license in %s will run out in 10 seconds."%_t
+                msg = "Your %s salvaging license in %s will run out in %s."%_t
             end
-
             doubleSend = true
         end
 
-        if time + 1 > 20 and time <= 20 then
+        if time + 1 > modConfig.expirationTimeCritical and time <= modConfig.expirationTimeCritical then
             if here then
-                msg = "Your salvaging license will run out in 20 seconds."%_t
+                msg = "Your %s salvaging license will run out in %s. Renew it NOW and save yourself some trouble!"%_t
             else
-                msg = "Your salvaging license in %s will run out in 20 seconds."%_t
-            end
-
-            doubleSend = true
-        end
-
-        if time + 1 > 30 and time <= 30 then
-            if here then
-                msg = "Your salvaging license will run out in 30 seconds. Renew it and save yourself some trouble!"%_t
-            else
-                msg = "Your salvaging license in %s will run out in 30 seconds. Renew it and save yourself some trouble!"%_t
+                msg = "Your %s salvaging license in %s will run out in %s. Renew it NOW and save yourself some trouble!"%_t
             end
         end
 
-        if time + 1 > 120 and time <= 120 then
+        if time + 1 > modConfig.expirationTimeWarning and time <= modConfig.expirationTimeWarning then
             if here then
-                msg = "Your salvaging license will run out in 2 minutes. Renew it NOW and save yourself some trouble!"%_t
+                msg = "Your %s salvaging license will run out in %s. Renew it immediately and save yourself some trouble!"%_t
             else
-                msg = "Your salvaging license in %s will run out in 2 minutes. Renew it NOW and save yourself some trouble!"%_t
+                msg = "Your %s salvaging license in %s will run out in %s. Renew it immediately and save yourself some trouble!"%_t
             end
         end
 
-        if time + 1 > 300 and time <= 300 then
+        if time + 1 > modConfig.expirationTimeNotice and time <= modConfig.expirationTimeNotice then
             if here then
-                msg = "Your salvaging license will run out in 5 minutes. Renew it immediately and save yourself some trouble!"%_t
+                msg = "Your %s salvaging license will run out in %s. Don't forget to renew it in time!"%_t
             else
-                msg = "Your salvaging license in %s will run out in 5 minutes. Renew it immediately and save yourself some trouble!"%_t
+                msg = "Your %s salvaging license in %s will run out in %s. Don't forget to renew it in time!"%_t
             end
         end
 
@@ -546,22 +584,31 @@ function Scrapyard.updateServer(timeStep)
             licenses[factionIndex] = nil
 
             if here then
-                msg = "Your salvaging license expired. You may no longer salvage in this area."%_t
+                msg = "Your %s salvaging license expired. You may no longer salvage in this area."%_t
             else
-                msg = "Your salvaging license in %s expired. You may no longer salvage in this area."%_t
+                msg = "Your %s salvaging license in %s expired. You may no longer salvage in this area."%_t
             end
         else
             licenses[factionIndex] = time
         end
 
         if msg then
+            local coordinates
             local x, y = Sector():getCoordinates()
-            local coordinates = "${x}:${y}" % {x = x, y = y}
+            coordinates = "${x}:${y}" % {x = x, y = y }
 
-            faction:sendChatMessage(station.title, 0, msg, coordinates)
-            if doubleSend then
-                faction:sendChatMessage(station.title, 2, msg, coordinates)
+            if here then
+                faction:sendChatMessage(station.title, 0, msg, licenseType, createReadableTimeString(time))
+                if doubleSend then
+                    faction:sendChatMessage(station.title, 2, msg, licenseType, createReadableTimeString(time))
+                end
+            else
+                faction:sendChatMessage(station.title, 0, msg, licenseType, coordinates, createReadableTimeString(time))
+                if doubleSend then
+                    faction:sendChatMessage(station.title, 2, msg, licenseType, coordinates, createReadableTimeString(time))
+                end
             end
+
         end
     end
 end
@@ -675,7 +722,7 @@ function Scrapyard.initSoloTab(durationSlider, licenseDurationlabel, basePricela
     maxSoloLicenseDurationLabel.width = 350
 
     if lifetimeStatusLabel then
-        lifetimeStatusLabel:setRange(0, modConfig.lifetimeTotalExperience)
+        lifetimeStatusLabel:setRange(0, modConfig.lifetimeExpRequired)
         lifetimeStatusLabel:setValue(0, "Reputation to low!", ColorRGB(0.25, 0.25, 0.25))
     end
 end
@@ -777,7 +824,7 @@ function Scrapyard.initAllianceTab(durationSlider, licenseDurationlabel, basePri
     maxAllianceLicenseDurationLabel.width = 350
 
     if lifetimeStatusLabel then
-        lifetimeStatusLabel:setRange(0, modConfig.lifetimeTotalExperience)
+        lifetimeStatusLabel:setRange(0, modConfig.lifetimeExpRequired)
         lifetimeStatusLabel:setValue(0, "Reputation to low!", ColorRGB(0.25, 0.25, 0.25))
     end
 end
@@ -814,4 +861,49 @@ function Scrapyard.notifyFaction(factionIndex, channel,  message, sender)
             end
         end
     end
+end
+
+function Scrapyard.getExperience(factionIndex)
+    local experience = 0
+    local faction = Faction(factionIndex)
+
+    if faction then
+        -- todo: deserialize logic
+        local currentExp = faction:getValue(MODULE .. FS .. 'experience')
+        experience = math.floor((modConfig.lifetimeExpRequired - currentExp) / 200 * modConfig.lifetimeExpFactor) + modConfig.lifetimeExpBaseline
+    end
+
+    return experience
+end
+
+function Scrapyard.allowedDamaging(faction)
+
+    local actions = legalActions[faction.index]
+    if actions == nil then
+        actions = 0
+    end
+
+    actions = actions + 1
+
+    if actions > modConfig.lifetimeExpTicks then
+        -- todo get real rep
+        local reputation = 90000
+        if reputation >= modConfig.lifetimeRepRequired then
+            -- todo: deserialize logic
+            local currentExp = faction:getValue(MODULE .. FS .. 'experience')
+            if currentExp == nil then
+                currentExp = 0
+            end
+
+            local newExp = Scrapyard.getExperience(faction.index)
+
+            local totalExp = currentExp + newExp
+            faction:setValue(MODULE .. FS .. 'experience', totalExp)
+        end
+
+        actions = 0
+
+    end
+
+    legalActions[faction.index] = actions
 end
