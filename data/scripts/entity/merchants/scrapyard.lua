@@ -270,6 +270,8 @@ function Scrapyard.updateServer(timeStep)
         time = time - timeStep
 
         local faction = Faction(factionIndex)
+        if not faction then goto continue end
+
         local here = false
         if faction.isAlliance then
             faction = Alliance(factionIndex)
@@ -351,6 +353,8 @@ function Scrapyard.updateServer(timeStep)
                 faction:sendChatMessage(station.title, 2, msg, coordinates)
             end
         end
+
+        ::continue::
     end
 
 end
@@ -420,8 +424,7 @@ function Scrapyard.buyLicense(duration)
 end
 
 function Scrapyard.sendLicenseDuration()
-    local owner, ship, player = getInteractingFaction(callingPlayer)
-    local duration = licenses[owner.index]
+    local duration = licenses[callingPlayer]
 
     if duration ~= nil then
         invokeClientFunction(Player(callingPlayer), "setLicenseDuration", duration)
