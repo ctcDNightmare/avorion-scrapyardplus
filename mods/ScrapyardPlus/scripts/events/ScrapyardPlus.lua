@@ -42,8 +42,9 @@ function ScrapyardPlus.initialize(eventType)
     end
 end
 
-function ScrapyardPlus.updateServer()
+function ScrapyardPlus.updateServer(timeStep)
 
+    timer = timer + timeStep
     if nextStep ~= nil then
         -- multi stage conversations and actions
         if events[nextStep] ~= nil
@@ -68,8 +69,6 @@ end
 -- scrapper aka sell a ship to the scrapyard
 -- todo: jump in with towed ship, talk, fly, talk/sell, jump out with towing ship only, convert towed ship to wreck
 function events.scrapperStageOne()
-    print('scrapperStageOne')
-
     local greetings = {
         "Howdy partner, look what I've found just outside the system. How much you payin' for it?",
         "Bleep blep!",
@@ -108,7 +107,12 @@ function events.scrapperStageOne()
 end
 
 function events.scrapperStageTwo()
-    print('scrapperStageTwo')
+    local delay = 5
+    if timer < delay then -- wait before continue
+        return 'scrapperStageTwo'
+    else
+        timer = 0
+    end
 
     Sector():broadcastChatMessage('Scrapper', 0, 'kthxbye!')
 
@@ -117,8 +121,6 @@ end
 
 -- disaster aka bad stuff happens
 function events.disasterStageOne()
-    print('disasterStageOne')
-
     -- bust some of the wrecks? hyperdrive overload?
     -- need some more options in here :-)
 
