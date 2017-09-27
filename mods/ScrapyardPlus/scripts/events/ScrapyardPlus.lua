@@ -30,27 +30,24 @@ function ScrapyardPlus.secure()
 end
 
 function ScrapyardPlus.initialize(eventType)
-    if eventType == nil then terminate() end
-
+    if eventType == nil then terminate() end -- sanity check
     ScrapyardPlus.initEventTypes()
-
     if eventTypes[eventType] ~= nil and type(eventTypes[eventType]) == 'function'
     then
-        nextStep = eventTypes[eventType]() -- support for multi-stage events
+        eventTypes[eventType]() -- support for multi-stage events
     else
         terminate() -- no suitable event found
     end
 end
 
 function ScrapyardPlus.updateServer(timeStep)
-
     timer = timer + timeStep
     if nextStep ~= nil then
         -- multi stage conversations and actions
         if events[nextStep] ~= nil
                 and type(events[nextStep]) == 'function'
         then
-            nextStep = events[nextStep]()
+            events[nextStep]()
             eventFinished = (nextStep == nil)
         end
     end
@@ -91,11 +88,11 @@ function events.scrapperStageOne()
         print('destroyer wreck incoming')
     end
 
-    if toBeCreated > 50 and toBeCreated <= 85 then -- cruiser
+    if toBeCreated > 65 and toBeCreated <= 85 then -- cruiser
         print('cruiser wreck incoming')
     end
 
-    if toBeCreated > 15 and toBeCreated <= 50 then -- frigate
+    if toBeCreated > 15 and toBeCreated <= 65 then -- frigate
         print('frigate wreck incoming')
     end
 
@@ -103,20 +100,20 @@ function events.scrapperStageOne()
         print('transport wreck incoming')
     end
 
-    return 'scrapperStageTwo' -- always return the next event or nil
+    nextStep = 'scrapperStageTwo' -- always set the next event or nil
 end
 
 function events.scrapperStageTwo()
     local delay = 5
     if timer < delay then -- wait before continue
-        return 'scrapperStageTwo'
+        return
     else
         timer = 0
     end
 
     Sector():broadcastChatMessage('Scrapper', 0, 'kthxbye!')
 
-    return nil -- always return the next event or nil
+    nextStep = nil -- always set the next event or nil
 end
 
 -- disaster aka bad stuff happens
@@ -129,7 +126,7 @@ function events.disasterStageOne()
     -- STUFF :)
     Sector():broadcastChatMessage('G.O.D.', 0, 'Bad stuff is happening')
 
-    return nil -- always return the next event or nil
+    nextStep = nil -- always set the next event or nil
 end
 
 

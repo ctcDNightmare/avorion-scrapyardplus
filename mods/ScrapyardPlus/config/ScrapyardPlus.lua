@@ -39,7 +39,7 @@ ScrapyardPlus.highTrafficChance = 0.3
 ScrapyardPlus.highTrafficSpawntime = 1
 
 -- disasters
-ScrapyardPlus.disasterChance = 0.5
+ScrapyardPlus.disasterChance = 0.25
 ScrapyardPlus.disasterSpawnTime = 3
 
 return ScrapyardPlus

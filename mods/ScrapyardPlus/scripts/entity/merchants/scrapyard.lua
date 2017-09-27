@@ -493,7 +493,7 @@ function Scrapyard.updateServer(timeStep)
     -- we need more minerals
     if highTrafficSystem then
         highTrafficTimer = highTrafficTimer + timeStep
-        if highTrafficTimer >= modConfig.highTrafficSpawntime * 10 then
+        if highTrafficTimer >= modConfig.highTrafficSpawntime * 15 then
             -- spawn new ship
             if station then
                 station:addScript(basePath .. '/scripts/events/ScrapyardPlus', 'high-traffic')
@@ -504,7 +504,7 @@ function Scrapyard.updateServer(timeStep)
 
     -- let's wreak some havoc
     disasterTimer = disasterTimer + timeStep
-    if disasterTimer >= modConfig.disasterSpawnTime * 10 then
+    if disasterTimer >= modConfig.disasterSpawnTime * 60 then
         local areWeInTrouble = math.random()
         -- maybe?!
         if station and areWeInTrouble <= modConfig.disasterChance then
