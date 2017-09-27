@@ -29,7 +29,7 @@ local licenses
 local illegalActions
 local legalActions
 local newsBroadcastCounter = 0
-local highTrafficSystem = false
+local highTrafficSystem
 local highTrafficTimer = 0
 local disasterTimer = 0
 
@@ -243,10 +243,15 @@ function Scrapyard.initialize()
             station.title = "Scrapyard"%_t
         end
 
-        local isHighTraffic = random()
-        if isHighTraffic <= modConfig.highTrafficChance then
+        local isHighTraffic = math.random()
+        if highTrafficSystem == nil and isHighTraffic <= modConfig.highTrafficChance
+        then
+            print('High Traffic Scrapyard found!', isHighTraffic, modConfig.highTrafficChance)
             highTrafficSystem = true
             station.title = "High Traffic Scrapyard"%_t
+        else
+            print('Normal Scrapyard found!', isHighTraffic, modConfig.highTrafficChance)
+            highTrafficSystem = false
         end
 
     end
@@ -486,24 +491,24 @@ function Scrapyard.updateServer(timeStep)
     end
 
     -- we need more minerals
-    highTrafficTimer = highTrafficTimer + timeStep
-    if highTrafficTimer * 60 >= modConfig.highTrafficSpawntime then
-        -- spawn new ship
-        local station = Entity()
-        if station then
-            station.addScriptOnce(basePath .. '/scripts/events/ScrapyardPlus', 'high-traffic')
+    if highTrafficSystem then
+        highTrafficTimer = highTrafficTimer + timeStep
+        if highTrafficTimer >= modConfig.highTrafficSpawntime * 10 then
+            -- spawn new ship
+            if station then
+                station:addScript(basePath .. '/scripts/events/ScrapyardPlus', 'high-traffic')
+            end
+            highTrafficTimer = 0
         end
-        highTrafficTimer = 0
     end
 
     -- let's wreak some havoc
     disasterTimer = disasterTimer + timeStep
-    if disasterTimer * 60 >= modConfig.disasterSpawnTime then
+    if disasterTimer >= modConfig.disasterSpawnTime * 10 then
         local areWeInTrouble = math.random()
-        local station = Entity()
         -- maybe?!
         if station and areWeInTrouble <= modConfig.disasterChance then
-            station.addScriptOnce(basePath .. '/scripts/events/ScrapyardPlus', 'disaster')
+            station:addScript(basePath .. '/scripts/events/ScrapyardPlus', 'disaster')
         end
         disasterTimer = 0
     end

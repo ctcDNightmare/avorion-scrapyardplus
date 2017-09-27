@@ -36,10 +36,10 @@ ScrapyardPlus.lifetimeExpBaseline = 10
 
 -- high traffic system
 ScrapyardPlus.highTrafficChance = 0.3
-ScrapyardPlus.highTrafficSpawntime = 15
+ScrapyardPlus.highTrafficSpawntime = 1
 
 -- disasters
-ScrapyardPlus.disasterChance = 0.05
-ScrapyardPlus.disasterSpawnTime = 30
+ScrapyardPlus.disasterChance = 0.5
+ScrapyardPlus.disasterSpawnTime = 3
 
 return ScrapyardPlus
