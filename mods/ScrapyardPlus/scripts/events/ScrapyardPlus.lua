@@ -111,7 +111,12 @@ function events.scrapperStageTwo()
         timer = 0
     end
 
-    Sector():broadcastChatMessage('Scrapper', 0, 'kthxbye!')
+    local goodbye = {
+        "kthxbye!",
+        "Fly safe.",
+        "o/ byebye"
+    }
+    Sector():broadcastChatMessage('Scrapper', 0, goodbye[math.random(1, #goodbye)])
 
     nextStep = nil -- always set the next event or nil
 end

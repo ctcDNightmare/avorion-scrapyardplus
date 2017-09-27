@@ -246,11 +246,9 @@ function Scrapyard.initialize()
         local isHighTraffic = math.random()
         if highTrafficSystem == nil and isHighTraffic <= modConfig.highTrafficChance
         then
-            print('High Traffic Scrapyard found!', isHighTraffic, modConfig.highTrafficChance)
             highTrafficSystem = true
             station.title = "High Traffic Scrapyard"%_t
         else
-            print('Normal Scrapyard found!', isHighTraffic, modConfig.highTrafficChance)
             highTrafficSystem = false
         end
 
@@ -599,18 +597,20 @@ function Scrapyard.updateServer(timeStep)
 
         if msg then
             local coordinates
+            local remaining
             local x, y = Sector():getCoordinates()
             coordinates = "${x}:${y}" % {x = x, y = y }
+            remaining = round(time)
 
             if here then
-                faction:sendChatMessage(station.title, 0, msg, licenseType, createReadableTimeString(time))
+                faction:sendChatMessage(station.title, 0, msg, licenseType, createReadableTimeString(remaining))
                 if doubleSend then
-                    faction:sendChatMessage(station.title, 2, msg, licenseType, createReadableTimeString(time))
+                    faction:sendChatMessage(station.title, 2, msg, licenseType, createReadableTimeString(remaining))
                 end
             else
-                faction:sendChatMessage(station.title, 0, msg, licenseType, coordinates, createReadableTimeString(time))
+                faction:sendChatMessage(station.title, 0, msg, licenseType, coordinates, createReadableTimeString(remaining))
                 if doubleSend then
-                    faction:sendChatMessage(station.title, 2, msg, licenseType, coordinates, createReadableTimeString(time))
+                    faction:sendChatMessage(station.title, 2, msg, licenseType, coordinates, createReadableTimeString(remaining))
                 end
             end
 
