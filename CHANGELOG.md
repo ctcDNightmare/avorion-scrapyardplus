@@ -1,3 +1,11 @@
+#### Version 1.3.0 *"preelementary-reptile"*
+* restructured file-layout
+* changed nicerNumbers helper to vanilla equivalent
+* add event to generate to wrecks if the system is 'high traffic'
+* add event for some desasters within the system
+* refactored modConfig
+* Add lifetime license
+
 #### Version 1.2.1 *"bushless-intimidation"*
 * port of vanilla functions from 0.14.2
 * add missing getUpdateInterval() & onCloseWindow()
