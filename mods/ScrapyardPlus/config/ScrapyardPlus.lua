@@ -29,17 +29,20 @@ ScrapyardPlus.expirationTimeFinal = 30
 -- lifetime
 ScrapyardPlus.allowLifetime = true
 ScrapyardPlus.lifetimeRepRequired = 100000
-ScrapyardPlus.lifetimeExpTicks = 5
+ScrapyardPlus.lifetimeExpTicks = 500
 ScrapyardPlus.lifetimeExpRequired = 100000
-ScrapyardPlus.lifetimeExpFactor = 0.9
-ScrapyardPlus.lifetimeExpBaseline = 10
+ScrapyardPlus.lifetimeExpFactor = 0.75
+ScrapyardPlus.lifetimeAllianceFactor = 0.5
+ScrapyardPlus.lifetimeExpBaseline = 5
 
 -- high traffic system
 ScrapyardPlus.highTrafficChance = 0.3
-ScrapyardPlus.highTrafficSpawntime = 1
+ScrapyardPlus.enableRegen = false
+ScrapyardPlus.regenSpawntime = 15
 
--- disasters
-ScrapyardPlus.disasterChance = 0.25
-ScrapyardPlus.disasterSpawnTime = 3
+-- events
+ScrapyardPlus.enableDisasters = false
+ScrapyardPlus.disasterChance = 0.03
+ScrapyardPlus.disasterSpawnTime = 20
 
 return ScrapyardPlus
