@@ -7,6 +7,11 @@ With ScrapyardPlus you can:
 * buy up to 8 hours total (depending on your reputation)
 * increment your current license in variable intervals from 5 minutes all the way up to 3 hours per order
 * get discounts for bulk orders and your current standing with the owner of the scrapyard
+* earn a lifetime-license for yourself or your alliance an never have to bother with buying an extension again (lifetime status is granted faction-wide!)
+
+
+**This mod requires the [ctccommon](https://github.com/ctcDNightmare/avorion-ctccommon) libs to run.  
+It's included in every release but not the sources!** 
 
 ## Installation
 1. download & extract the [mod](https://github.com/ctcDNightmare/avorion-scrapyardplus/releases) into your Avorion folder
@@ -15,7 +20,7 @@ With ScrapyardPlus you can:
 ```Lua
 if not pcall(require, "mods/ScrapyardPlus/scripts/entity/merchants/scrapyard") then print("Failed to load ScrapyardPlus") end -- DNightmare/ScrapyardPlus
 ```  
-**In case you are using the MoveUI-Mod from Dirtyredz as well, insert it above that!**
+**In case you are using the MoveUI-Mod from Dirtyredz as well, insert ScrapyardPlus before MoveUI!**
  
 3. done
 
@@ -24,7 +29,13 @@ if not pcall(require, "mods/ScrapyardPlus/scripts/entity/merchants/scrapyard") t
 ![Lone wolf with good relations](https://i.imgur.com/hp9nsGU.jpg)  
 
 *Alliance player with normal reputation*  
-![Alliance player with normal relations](https://i.imgur.com/KU8JH3A.jpg)
+![Alliance player with normal relations](https://i.imgur.com/KU8JH3A.jpg)  
+
+*Nearly reached lifetime status but lost reputation before finishing it*  
+![Nearly there!](https://i.imgur.com/8amcRQZ.jpg)
+
+*Finally reached lifetime status*  
+![Lifetime](https://i.imgur.com/ZOsQhzt.jpg)
 
 ## Roadmap
 - ~~extend your current license instead of overwriting it~~
@@ -32,7 +43,8 @@ if not pcall(require, "mods/ScrapyardPlus/scripts/entity/merchants/scrapyard") t
 - ~~reputation based benefits (max duration and discount)~~
 - ~~split the license system into private & alliance so you can buy a personal one even if you are in an alliance~~
 - ~~flexible duration selection via slider~~
-- lifetime license
+- ~~lifetime license~~
+- regenerating wrecks / events to support lifetime licenses
 
 ## Feedback & Discussion
 http://www.avorion.net/forum/index.php/topic,3850.0.html
