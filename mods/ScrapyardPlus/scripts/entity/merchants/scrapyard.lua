@@ -69,8 +69,6 @@ function Scrapyard.renderUI()
     end
 end
 
-
-
 function Scrapyard.onCloseWindow()
     local station = Entity()
     displayChatMessage("Please, do come again."%_t, station.title, 0)
@@ -78,7 +76,6 @@ function Scrapyard.onCloseWindow()
     visible = false
 end
 
--- this function gets called once each frame, on client only
 function Scrapyard.getUpdateInterval()
     return 1
 end
@@ -325,38 +322,50 @@ function Scrapyard.updatePrice(slider)
 end
 
 function Scrapyard.updateClient(timeStep)
+    local soloLifetime = (currentSoloExp >= modConfig.lifetimeExpRequired)
+    local allianceLifetime = (currentAllianceExp >= modConfig.lifetimeExpRequired)
     local hasAlliance = false
     if Player().allianceIndex then
         hasAlliance = true
     end
-    soloLicenseDuration = soloLicenseDuration - timeStep
 
-    if hasAlliance then
+    if not soloLifetime then
+        soloLicenseDuration = soloLicenseDuration - timeStep
+    end
+    if not allianceLifetime and hasAlliance then
         allianceLicenseDuration = allianceLicenseDuration - timeStep
     end
-
     if visible then
-        Scrapyard.getCurrentExperience()
-        if soloLicenseDuration > 0 then
-            currentSoloLicenseDurationLabel.caption = "${time}" % _t % { time = createReadableTimeString(soloLicenseDuration) }
+        if soloLifetime then
+            currentSoloLicenseDurationLabel.caption = "Never (lifetime license)" % _t
         else
-            currentSoloLicenseDurationLabel.caption = "No license found." % _t
-        end
-        if hasAlliance then
-            if allianceLicenseDuration > 0 then
-                currentAllianceLicenseDurationLabel.caption = "${time}" % _t % { time = createReadableTimeString(allianceLicenseDuration) }
+            if soloLicenseDuration > 0 then
+                currentSoloLicenseDurationLabel.caption = "${time}" % _t % { time = createReadableTimeString(soloLicenseDuration) }
             else
-                currentAllianceLicenseDurationLabel.caption = "No license found." % _t
+                currentSoloLicenseDurationLabel.caption = "No license found." % _t
             end
         end
 
+        if hasAlliance then
+            if allianceLifetime then
+                currentAllianceLicenseDurationLabel.caption = "Never (lifetime license)" % _t
+            else
+                if allianceLicenseDuration > 0 then
+                    currentAllianceLicenseDurationLabel.caption = "${time}" % _t % { time = createReadableTimeString(allianceLicenseDuration) }
+                else
+                    currentAllianceLicenseDurationLabel.caption = "No license found." % _t
+                end
+            end
+        end
+
+        Scrapyard.getCurrentExperience()
         if soloLifetimeStatusBar then -- solo leveling towards lifetime
             local currentReputation = Player():getRelations(Entity().factionIndex)
 
             local description
             local color
 
-            if currentReputation >= modConfig.lifetimeRepRequired then
+            if currentReputation >= modConfig.lifetimeRepRequired or soloLifetime then
                 description = createMonetaryString(currentSoloExp) .. '/' .. createMonetaryString(modConfig.lifetimeExpRequired)
                 color = ColorRGB(0.25, 1, 0.25)
             else
@@ -366,13 +375,13 @@ function Scrapyard.updateClient(timeStep)
             soloLifetimeStatusBar:setValue(currentSoloExp, description, color)
         end
 
-        if allianceLifetimeStatusBar then -- solo leveling towards lifetime
+        if allianceLifetimeStatusBar then -- alliance leveling towards lifetime
             local currentReputation = Alliance():getRelations(Entity().factionIndex)
 
             local description
             local color
 
-            if currentReputation >= modConfig.lifetimeRepRequired then
+            if currentReputation >= modConfig.lifetimeRepRequired or allianceLifetime then
                 description = createMonetaryString(currentAllianceExp) .. '/' .. createMonetaryString(modConfig.lifetimeExpRequired)
                 color = ColorRGB(0.25, 1, 0.25)
             else
@@ -419,8 +428,8 @@ function Scrapyard.buyLicense(duration, type)
     local player = Player(callingPlayer)
     local ship
 
-    if type == typeAlliance then
-        buyer, ship, player = getInteractingFaction(callingPlayer, AlliancePrivilege.SpendResources)
+    if type == typeAlliance and player.allianceIndex then
+        buyer = Alliance(player.allianceIndex)
     end
 
     if not buyer then return end
@@ -470,7 +479,11 @@ end
 
 function Scrapyard.sendLicenseDuration()
 
-    local _, _, player, alliance = getInteractingFaction(callingPlayer)
+    local player = Player(callingPlayer)
+    local alliance
+    if player.allianceIndex then
+        alliance = Alliance(player.allianceIndex)
+    end
 
     local soloDuration = 0
     if player then
@@ -573,12 +586,17 @@ function Scrapyard.updateServer(timeStep)
     end
 
     for factionIndex, time in pairs(licenses) do
-
-        time = time - timeStep
-
         local faction = Faction(factionIndex)
-
         if not faction then return end
+
+        -- check for lifetime reached
+
+        local experience = Scrapyard.loadExperience(factionIndex)
+        local lifetimeReached = (experience[Faction().index] >= modConfig.lifetimeExpRequired)
+
+        if not lifetimeReached then
+            time = time - timeStep
+        end
 
         local here = false
         local licenseType
@@ -977,8 +995,8 @@ function Scrapyard.allowedDamaging(faction)
     end
 
     actions = actions + 1
-    if actions > modConfig.lifetimeExpTicks then
-        local reputation = faction:getRelations(scrapyardFaction)
+    if actions >= modConfig.lifetimeExpTicks then
+        local reputation = faction:getRelations(scrapyardFaction.index)
         if reputation >= modConfig.lifetimeRepRequired then
             local experience
             local serialized = faction:getValue(MODULE .. FS .. 'experience')
@@ -1004,9 +1022,17 @@ function Scrapyard.allowedDamaging(faction)
                 end
                 if current + newExp > modConfig.lifetimeExpRequired then
                     experience[scrapyardFaction.index] = modConfig.lifetimeExpRequired
+                    if faction.isAlliance then
+                        Alliance(faction.index):sendChatMessage(Entity().title, 0, 'Congratulations! You reached lifetime status with our faction!')
+                        Alliance(faction.index):sendChatMessage(Entity().title, 2, 'Lifetime license activated!')
+                    elseif faction.isPlayer then
+                        Player(faction.index):sendChatMessage(Entity().title, 0, 'Congratulations! You reached lifetime status with our faction!')
+                        Player(faction.index):sendChatMessage(Entity().title, 2, 'Lifetime license activated!')
+                    end
                 else
                     experience[scrapyardFaction.index] = current + newExp
                 end
+
                 -- only setValue if nessecary
                 faction:setValue(MODULE .. FS .. 'experience', serialize(experience))
             else
