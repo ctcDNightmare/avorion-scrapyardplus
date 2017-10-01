@@ -1,8 +1,6 @@
 #### Version 1.3.0 *"preelementary-reptile"*
 * restructured file-layout
 * changed nicerNumbers helper to vanilla equivalent
-* add event to generate to wrecks if the system is 'high traffic'
-* add event for some desasters within the system
 * refactored modConfig
 * Add lifetime license
 

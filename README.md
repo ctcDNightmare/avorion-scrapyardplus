@@ -7,7 +7,11 @@ With ScrapyardPlus you can:
 * buy up to 8 hours total (depending on your reputation)
 * increment your current license in variable intervals from 5 minutes all the way up to 3 hours per order
 * get discounts for bulk orders and your current standing with the owner of the scrapyard
-* earn a lifetime-license for yourself or your alliance an never have to bother with buying an extension (lifetime status is granted faction-wide!)
+* earn a lifetime-license for yourself or your alliance an never have to bother with buying an extension again (lifetime status is granted faction-wide!)
+
+
+**This mod requires the [ctccommon](https://github.com/ctcDNightmare/avorion-ctccommon) libs to run.  
+It's included in every release but not the sources!** 
 
 ## Installation
 1. download & extract the [mod](https://github.com/ctcDNightmare/avorion-scrapyardplus/releases) into your Avorion folder
