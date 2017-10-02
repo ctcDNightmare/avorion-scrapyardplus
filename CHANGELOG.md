@@ -1,3 +1,6 @@
+#### Version 1.3.2 *"kangaroolike-bowman"*
+* code-documentation
+
 #### Version 1.3.1 *"unassimilable-demodulator"*
 * fixed lifetime initialization on newly discovered scrapyards
 
