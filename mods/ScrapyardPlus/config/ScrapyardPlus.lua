@@ -6,7 +6,7 @@ ScrapyardPlus.author = "DNightmare"
 ScrapyardPlus.homepage = "https://github.com/ctcDNightmare"
 ScrapyardPlus.tags = {"scrapyard", "overhaul", "server", "client", "events", "lifetime-license" }
 ScrapyardPlus.version = {
-    major=1, minor=3, patch = 0,
+    major=1, minor=3, patch = 1,
     string = function()
         return  ScrapyardPlus.version.major .. '.' ..
                 ScrapyardPlus.version.minor .. '.' ..
