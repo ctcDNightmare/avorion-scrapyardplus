@@ -25,9 +25,9 @@ local typeAlliance = 'ALLIANCE'
 local typeSolo = 'SOLO'
 
 -- server
-local licenses
-local illegalActions
-local legalActions
+local licenses = {}
+local illegalActions = {}
+local legalActions = {}
 local newsBroadcastCounter = 0
 local highTrafficSystem = false
 local highTrafficTimer = 0
@@ -256,6 +256,10 @@ function Scrapyard.initialize()
             highTrafficSystem = false
         end
 
+        -- check for lifetime reached
+        local experience = Scrapyard.loadExperience(Faction().index)
+        local lifetimeReached = (experience[Faction().index] >= modConfig.lifetimeExpRequired)
+
     end
 
     if onClient() then
@@ -265,8 +269,8 @@ function Scrapyard.initialize()
             EntityIcon().icon = "data/textures/icons/pixel/scrapyard_fat.png"
             InteractionText().text = Dialog.generateStationInteractionText(Entity(), random())
         end
+        invokeServerFunction("checkLifetime", Player().index)
     end
-
 end
 
 function Scrapyard.initUI()
@@ -570,6 +574,7 @@ function Scrapyard.updateServer(timeStep)
         disasterTimer = 0
     end
 
+    if not illegalActions then illegalActions = {} end
     for factionIndex, actions in pairs(illegalActions) do
 
         actions = actions - 1
@@ -585,16 +590,20 @@ function Scrapyard.updateServer(timeStep)
         legalActions = {}
     end
 
+    if not licenses then licenses = {} end
     for factionIndex, time in pairs(licenses) do
         local faction = Faction(factionIndex)
         if not faction then return end
 
         -- check for lifetime reached
-
         local experience = Scrapyard.loadExperience(factionIndex)
         local lifetimeReached = (experience[Faction().index] >= modConfig.lifetimeExpRequired)
 
-        if not lifetimeReached then
+        if lifetimeReached then
+            if time < 3600 then -- lock time at 1 hr as 'lifetime'
+                time = 3600
+            end
+        else
             time = time - timeStep
         end
 
@@ -908,6 +917,22 @@ function Scrapyard.onBuyLicenseButtonPressed(button)
     end
 end
 
+function Scrapyard.checkLifetime(playerIndex)
+    local player = Player(playerIndex)
+    local soloExperience = Scrapyard.loadExperience(player.index)
+    if soloExperience[Faction().index] >= modConfig.lifetimeExpRequired then
+        licenses[player.index] = 3600
+    end
+
+    local alliance = player.allianceIndex
+    if alliance then
+        local allianceExperience  = Scrapyard.loadExperience(alliance)
+        if allianceExperience[Faction().index] >= modConfig.lifetimeExpRequired then
+            licenses[alliance] = 3600
+        end
+    end
+end
+
 function Scrapyard.getMaxLicenseDuration(player)
     local currentReputation = player:getRelations(Faction().index)
     local reputationBonusFactor = math.floor(currentReputation / 10000)
@@ -998,22 +1023,8 @@ function Scrapyard.allowedDamaging(faction)
     if actions >= modConfig.lifetimeExpTicks then
         local reputation = faction:getRelations(scrapyardFaction.index)
         if reputation >= modConfig.lifetimeRepRequired then
-            local experience
-            local serialized = faction:getValue(MODULE .. FS .. 'experience')
-            if serialized ~= nil then
-                experience = loadstring(serialized)()
-                if type(experience) ~= 'table' then
-                    experience = {}
-                end
-            else
-                experience = {}
-            end
-
-            if experience[scrapyardFaction.index] == nil then
-                experience[scrapyardFaction.index] = 0
-            end
+            local experience = Scrapyard.loadExperience(faction.index)
             local current = experience[scrapyardFaction.index]
-
             local newExp
             if current < modConfig.lifetimeExpRequired then
                 newExp = Scrapyard.calculateNewExperience(current)
