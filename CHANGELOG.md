@@ -1,3 +1,6 @@
+#### Version 1.3.1 *"unassimilable-demodulator"*
+* fixed lifetime initialization on newly discovered scrapyards
+
 #### Version 1.3.0 *"preelementary-reptile"*
 * restructured file-layout
 * changed nicerNumbers helper to vanilla equivalent
