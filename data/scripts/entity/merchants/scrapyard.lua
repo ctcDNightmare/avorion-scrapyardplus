@@ -368,16 +368,17 @@ function Scrapyard.sellCraft()
 
     -- Create Wreckage
     local position = ship.position
-    local plan = ship:getPlan();
+    local plan = ship:getMovePlan();
 
     -- remove the old craft
     Sector():deleteEntity(ship)
 
     -- create a wreckage in its place
+    local moneyValue = Scrapyard.getShipValue(plan)
+
     local wreckageIndex = Sector():createWreckage(plan, position)
 
-    local moneyValue = Scrapyard.getShipValue(plan)
-    buyer:receive(moneyValue)
+    buyer:receive(Format("Received %2% credits for %1% from a scrapyard."%_T, ship.name), moneyValue)
 
     invokeClientFunction(player, "transactionComplete")
 end
@@ -410,7 +411,7 @@ function Scrapyard.buyLicense(duration)
         return;
     end
 
-    buyer:pay(price)
+    buyer:pay("Paid %1% credits for a scrapyard license."%_T, price)
 
     -- register player's license
     licenses[buyer.index] = duration

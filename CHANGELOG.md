@@ -1,3 +1,8 @@
+#### Version 1.3.2 *"kangaroolike-bowman"*
+* code-documentation
+* fixed selling of ship
+* updated vanilla file to v17
+
 #### Version 1.3.1 *"unassimilable-demodulator"*
 * fixed lifetime initialization on newly discovered scrapyards
 

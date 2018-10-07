@@ -8,7 +8,6 @@ local Dialog = require("dialogutility")
 
 -- Don't remove or alter the following comment, it tells the game the namespace this script lives in. If you remove it, the script will break.
 -- namespace Scrapyard
-Scrapyard = {}
 
 -- constants
 local MODULE = 'ScrapyardPlus' -- our module name
@@ -18,7 +17,7 @@ local FS = '::' -- field separator
 local libPath = "mods/ctccommon/scripts/lib"
 local basePath = "mods/" .. MODULE
 local modConfig = require(basePath .. '/config/' .. MODULE)
-local requiredLibs = {'/serialize'}
+local requiredLibs = {'/serialize'} -- libs from 'ctccommon' which are required by this mod
 
 -- constants
 local typeAlliance = 'ALLIANCE'
@@ -62,28 +61,23 @@ local currentAllianceExp = 0
 function Scrapyard.interactionPossible(playerIndex, option)
     return CheckFactionInteraction(playerIndex, -10000)
 end
-
 function Scrapyard.renderUI()
     if tabbedWindow:getActiveTab().name == "Sell Ship"%_t then
         renderPrices(planDisplayer.lower + 20, "Ship Value:"%_t, uiMoneyValue, nil)
     end
 end
-
 function Scrapyard.onCloseWindow()
     local station = Entity()
     displayChatMessage("Please, do come again."%_t, station.title, 0)
 
     visible = false
 end
-
 function Scrapyard.getUpdateInterval()
     return 1
 end
-
 function Scrapyard.getLicenseDuration()
     invokeServerFunction("sendLicenseDuration")
 end
-
 function Scrapyard.sellCraft()
     local buyer, ship, player = getInteractingFaction(callingPlayer, AlliancePrivilege.ModifyCrafts, AlliancePrivilege.SpendResources)
     if not buyer then return end
@@ -106,7 +100,6 @@ function Scrapyard.sellCraft()
 
     invokeClientFunction(player, "transactionComplete")
 end
-
 function Scrapyard.getShipValue(plan)
     local sum = plan:getMoneyValue()
     local resourceValue = {plan:getResourceValue()}
@@ -119,11 +112,9 @@ function Scrapyard.getShipValue(plan)
     -- This is to avoid exploiting the scrapyard functionality by buying and then selling ships
     return sum * 0.75
 end
-
 function Scrapyard.transactionComplete()
     ScriptUI():stopInteraction()
 end
-
 function Scrapyard.unallowedDamaging(shooter, faction, damage)
 
     local pilots = {}
@@ -213,7 +204,6 @@ function Scrapyard.onShowWindow()
 
     visible = true
 end
-
 function Scrapyard.restore(data)
     -- clear earlier data
     licenses = data.licenses
@@ -221,7 +211,6 @@ function Scrapyard.restore(data)
     legalActions = data.legalActions
     highTrafficSystem = data.highTrafficSystem
 end
-
 function Scrapyard.secure()
     -- save licenses
     local data = {}
@@ -231,7 +220,6 @@ function Scrapyard.secure()
     data.highTrafficSystem = highTrafficSystem
     return data
 end
-
 function Scrapyard.initialize()
 
     if onServer() then
@@ -272,7 +260,6 @@ function Scrapyard.initialize()
         invokeServerFunction("checkLifetime", Player().index)
     end
 end
-
 function Scrapyard.initUI()
 
     local res = getResolution()
@@ -305,7 +292,6 @@ function Scrapyard.initUI()
         Scrapyard.createAllianceTab()
     end
 end
-
 function Scrapyard.updatePrice(slider)
     for i, group in pairs(uiGroups) do
         if group.durationSlider.index == slider.index then
@@ -324,7 +310,6 @@ function Scrapyard.updatePrice(slider)
         end
     end
 end
-
 function Scrapyard.updateClient(timeStep)
     local soloLifetime = (currentSoloExp >= modConfig.lifetimeExpRequired)
     local allianceLifetime = (currentAllianceExp >= modConfig.lifetimeExpRequired)
@@ -396,12 +381,10 @@ function Scrapyard.updateClient(timeStep)
         end
     end
 end
-
 function Scrapyard.setLicenseDuration(soloDuration, allianceDuration)
     soloLicenseDuration = soloDuration or 0
     allianceLicenseDuration = allianceDuration or 0
 end
-
 function Scrapyard.getLicensePrice(orderingFaction, minutes, type)
     local basePrice = round(minutes * modConfig.pricePerMinute * Balancing_GetSectorRichnessFactor(Sector():getCoordinates()))
     if type == typeAlliance then
@@ -426,7 +409,6 @@ function Scrapyard.getLicensePrice(orderingFaction, minutes, type)
 
     return basePrice, reputationDiscount, bulkDiscount, totalPrice
 end
-
 function Scrapyard.buyLicense(duration, type)
     local buyer = Player(callingPlayer)
     local player = Player(callingPlayer)
@@ -480,7 +462,6 @@ function Scrapyard.buyLicense(duration, type)
 
     Scrapyard.sendLicenseDuration()
 end
-
 function Scrapyard.sendLicenseDuration()
 
     local player = Player(callingPlayer)
@@ -501,7 +482,6 @@ function Scrapyard.sendLicenseDuration()
 
     invokeClientFunction(player, "setLicenseDuration", soloDuration, allianceDuration)
 end
-
 function Scrapyard.onHullHit(objectIndex, block, shootingCraftIndex, damage, position)
     local object = Entity(objectIndex)
     if object and object.isWreckage then
@@ -535,7 +515,6 @@ function Scrapyard.onHullHit(objectIndex, block, shootingCraftIndex, damage, pos
         end
     end
 end
-
 function Scrapyard.updateServer(timeStep)
 
     local station = Entity();
@@ -697,6 +676,8 @@ function Scrapyard.updateServer(timeStep)
 end
 
 -- ScrapyardPlus new functions
+--- createSoloTab
+-- Create all relevant UIElements for the solo-license tab
 function Scrapyard.createSoloTab()
     -- create a second tab
     local licenseTab = tabbedWindow:createTab("Private /*UI Tab title*/" % _t, "", "Buy a personal salvaging license" % _t)
@@ -768,6 +749,8 @@ function Scrapyard.createSoloTab()
     })
 end
 
+--- initSoloTab
+-- Initialize the solo-license tab with default values
 function Scrapyard.initSoloTab(durationSlider, licenseDurationlabel, basePricelabel, reputationDiscountlabel, bulkDiscountlabel, totalPricelabel, lifetimeStatusBar, size)
     -- Init values & properties
     durationSlider.value = 5
@@ -807,6 +790,8 @@ function Scrapyard.initSoloTab(durationSlider, licenseDurationlabel, basePricela
     end
 end
 
+--- createAllianceTab
+-- Create all relevant UIElements for the alliance-license tab
 function Scrapyard.createAllianceTab()
     local allianceTab = tabbedWindow:createTab("Alliance /*UI Tab title*/" % _t, "", "Buy a salvaging license for your alliance" % _t)
     local size = allianceTab.size -- not really required, all tabs have the same size
@@ -868,6 +853,9 @@ function Scrapyard.createAllianceTab()
         buyButton = buyButton
     })
 end
+
+--- initAllianceTab
+-- Initialize the alliance-license tab with default values
 function Scrapyard.initAllianceTab(durationSlider, licenseDurationlabel, basePricelabel, reputationDiscountlabel, bulkDiscountlabel, totalPricelabel, lifetimeStatusBar, size)
     durationSlider.value = 5
     durationSlider.showValue = false
@@ -906,6 +894,8 @@ function Scrapyard.initAllianceTab(durationSlider, licenseDurationlabel, basePri
     end
 end
 
+--- onBuyLicenseButtonPressed
+-- Register a new license with the correct faction (player/alliance)
 function Scrapyard.onBuyLicenseButtonPressed(button)
     for _, group in pairs(uiGroups) do
         -- find which button got pressed
@@ -917,6 +907,8 @@ function Scrapyard.onBuyLicenseButtonPressed(button)
     end
 end
 
+--- checkLifetime
+-- Load a player and see if he already earned a lifetime license for personal or alliance use
 function Scrapyard.checkLifetime(playerIndex)
     local player = Player(playerIndex)
     local soloExperience = Scrapyard.loadExperience(player.index)
@@ -933,6 +925,8 @@ function Scrapyard.checkLifetime(playerIndex)
     end
 end
 
+--- getMaxLicenseDuration
+-- Based on current reputation return the current maximum duration a player can accumulate
 function Scrapyard.getMaxLicenseDuration(player)
     local currentReputation = player:getRelations(Faction().index)
     local reputationBonusFactor = math.floor(currentReputation / 10000)
@@ -941,6 +935,8 @@ function Scrapyard.getMaxLicenseDuration(player)
     return (180 + (reputationBonusFactor * 30)) * 60
 end
 
+--- notifyFaction
+-- Helper to notify all online players of given faction
 function Scrapyard.notifyFaction(factionIndex, channel,  message, sender)
     
     local faction = Faction(factionIndex)
@@ -956,6 +952,8 @@ function Scrapyard.notifyFaction(factionIndex, channel,  message, sender)
     end
 end
 
+--- calculateNewExperience
+-- Based on the current experience return how much a player/alliance will earn
 function Scrapyard.calculateNewExperience(currentExp)
     local experience = 0
 
@@ -964,10 +962,14 @@ function Scrapyard.calculateNewExperience(currentExp)
     return experience
 end
 
+--- getCurrentExperience
+-- Trigger the server to send the current experience to the client
 function Scrapyard.getCurrentExperience()
     invokeServerFunction('sendCurrentExperience')
 end
 
+--- sendCurrentExperience
+-- Send the current experience to the client
 function Scrapyard.sendCurrentExperience()
     local player = Player(callingPlayer)
     local alliance
@@ -988,6 +990,8 @@ function Scrapyard.sendCurrentExperience()
     invokeClientFunction(Player(callingPlayer), "setCurrentExperience",  playerExperience[Faction().index], allianceExperience[Faction().index])
 end
 
+--- loadExperience
+-- Deserialize load and sanity-check current experience from given faction
 function Scrapyard.loadExperience(factionIndex)
     local faction = Faction(factionIndex)
     local serialized = faction:getValue(MODULE .. FS .. 'experience')
@@ -1007,11 +1011,15 @@ function Scrapyard.loadExperience(factionIndex)
     return experience
 end
 
+--- setCurrentExperience
+-- Store the received experience from the server at the client
 function Scrapyard.setCurrentExperience(soloExp, allianceExp)
     currentSoloExp = soloExp or 0
     currentAllianceExp = allianceExp or 0
 end
 
+--- allowedDamaging
+-- Called when a player/alliance is salvaging with a valid license
 function Scrapyard.allowedDamaging(faction)
     local actions = legalActions[faction.index]
     local scrapyardFaction = Faction()
