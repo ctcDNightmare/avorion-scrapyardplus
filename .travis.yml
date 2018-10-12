@@ -6,18 +6,14 @@ env:
   global:
     - LUAROCKS=2.3.0
   matrix:
-    - LUA=luajit     # latest stable version (2.0.4)
+    - LUA=lua5.2
 
 before_install:
   - source .travis/setenv_lua.sh
-  - pip install --user cpp-coveralls
-  - luarocks install Lua-cURL         --server=https://luarocks.org/dev
-  - luarocks install luacov-coveralls --server=https://luarocks.org/dev
-  - luarocks install lunitx
+  - luarocks install busted
 
 script:
-  - cd test
-  - lunit.sh test.lua
+  - busted
 
 notifications:
   email:
