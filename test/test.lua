@@ -19,17 +19,4 @@ function test_1()
   assert_false(false)
 end
 
-if LUA_VER == 'Lua 5.2' then
-function test_lua_52()
-  assert_nil(unpack)
-end
-end
-
-if LUA_VER == 'Lua 5.3' then
-function test_lua_53()
-  assert_nil(pow)
-  assert_nil(bit32)
-end
-end
-
 if not HAS_RUNNER then lunit.run() end
