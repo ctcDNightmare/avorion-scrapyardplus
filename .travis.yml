@@ -1,0 +1,25 @@
+language: c
+
+sudo: false
+
+env:
+  global:
+    - LUAROCKS=2.3.0
+  matrix:
+    - LUA=luajit     # latest stable version (2.0.4)
+
+before_install:
+  - source .travis/setenv_lua.sh
+  - pip install --user cpp-coveralls
+  - luarocks install Lua-cURL         --server=https://luarocks.org/dev
+  - luarocks install luacov-coveralls --server=https://luarocks.org/dev
+  - luarocks install lunitx
+
+script:
+  - cd test
+  - lunit.sh test.lua
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
