@@ -17,7 +17,6 @@ before_install:
 
 script:
   - cd test
-  - lua -e "print(require'cURL'.version())"
   - lunit.sh test.lua
 
 notifications:
