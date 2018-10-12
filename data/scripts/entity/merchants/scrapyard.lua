@@ -397,6 +397,8 @@ function Scrapyard.getShipValue(plan)
 end
 
 function Scrapyard.buyLicense(duration)
+    duration = duration or 0
+    if duration <= 0 then return end
 
     local buyer, ship, player = getInteractingFaction(callingPlayer, AlliancePrivilege.SpendResources)
     if not buyer then return end
