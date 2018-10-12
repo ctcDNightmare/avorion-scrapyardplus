@@ -11,8 +11,7 @@ With ScrapyardPlus you can:
 * increment your current license in variable intervals from 5 minutes all the way up to 3 hours per order
 * get discounts for bulk orders and your current standing with the owner of the scrapyard
 * earn a lifetime-license for yourself or your alliance an never have to bother with buying an extension again (lifetime status is granted faction-wide!)
-* configure all important things to suit your (or your servers) needs
-``mods/ScrapyardPlus/config/ScrapyardPlus.lua``
+* configure all important things to suit your (or your servers) needs (``mods/ScrapyardPlus/config/ScrapyardPlus.lua``)
 
 **This mod requires the [ctccommon](https://github.com/ctcDNightmare/avorion-ctccommon) libs to run.  
 It's included in every release but not the sources!** 
@@ -86,7 +85,8 @@ ScrapyardPlus.disasterSpawnTime = 20 -- [Default: 30] Time (in minutes) how ofte
 - ~~flexible duration selection via slider~~
 - ~~lifetime license~~
 - regenerating wrecks / events to support lifetime licenses
-Hint: you can take a look at the regen/event system by enabling it in the config
+
+**Hint**: You can take a look at the regen/event system by enabling it in the configfile. It's still WIP
 
 
 ## Feedback & Discussion
