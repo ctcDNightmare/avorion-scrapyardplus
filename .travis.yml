@@ -9,8 +9,8 @@ env:
     - LUA=lua5.2
 
 branches:
-  only:
-    - master
+  except:
+    - slave
 
 before_install:
   - source .travis/setenv_lua.sh
