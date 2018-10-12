@@ -1,0 +1,3 @@
+[submodule ".modman/lib-ctccommon"]
+	path = .modman/lib-ctccommon
+	url = git@github.com:ctcDNightmare/avorion-ctccommon.git

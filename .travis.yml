@@ -4,22 +4,29 @@ sudo: false
 
 env:
   global:
-    - LUAROCKS=2.3.0
+    - LUAROCKS=3.0.3
   matrix:
     - LUA=lua5.2
+
+# disable the default submodule logic
+git:
+  submodules: false
+
+# use sed to replace the SSH URL with the public URL, then init and update submodules
+before_install:
+  - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+  - git submodule update --init --recursive
 
 branches:
   except:
     - slave
+    - /^release-.*$/
 
 before_install:
   - source .travis/setenv_lua.sh
+  - bash < <(curl -s -L https://raw.github.com/colinmollenhour/modman/master/modman-installer)
   - luarocks install busted
 
 script:
+  - modman deploy-all
   - busted
-
-notifications:
-  email:
-    on_success: change
-    on_failure: always
