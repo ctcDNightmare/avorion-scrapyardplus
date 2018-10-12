@@ -4,22 +4,20 @@ sudo: false
 
 env:
   global:
-    - LUAROCKS=2.3.0
+    - LUAROCKS=3.0.3
   matrix:
     - LUA=lua5.2
 
 branches:
   except:
     - slave
+    - /^release-.*$/
 
 before_install:
   - source .travis/setenv_lua.sh
+  - bash < <(curl -s -L https://raw.github.com/colinmollenhour/modman/master/modman-installer)
   - luarocks install busted
 
 script:
+  - modman deploy-all
   - busted
-
-notifications:
-  email:
-    on_success: change
-    on_failure: always

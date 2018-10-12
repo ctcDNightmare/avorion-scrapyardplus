@@ -1,5 +1,9 @@
-# ScrapyardPlus
+# ScrapyardPlus 
+####v1.4.0 "profanatory-narcotisation"
+[![Build Status](https://travis-ci.org/ctcDNightmare/avorion-scrapyardplus.svg?branch=master)](https://travis-ci.org/ctcDNightmare/avorion-scrapyardplus)
+
 ___
+
 Your salvaging ops are longer then 60 minutes?  
 You want to get something in return for grinding all the precious reputation?  
 
