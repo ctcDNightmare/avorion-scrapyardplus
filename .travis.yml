@@ -30,8 +30,3 @@ before_install:
 script:
   - modman deploy-all
   - busted
-
-notifications:
-  urls:
-    - https://mattermost.2mt.de/hooks/4f8rqq1p37f7ibg3bok4ic3xde
-  on_success: change
