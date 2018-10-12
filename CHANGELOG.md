@@ -1,3 +1,8 @@
+#### Version 1.4.0 *"profanatory-narcotisation"*
+* added travis.ci
+* updated vanillacode to 0.19.x
+* removed duplicated vanilla code
+
 #### Version 1.3.2 *"kangaroolike-bowman"*
 * code-documentation
 * fixed selling of ship
