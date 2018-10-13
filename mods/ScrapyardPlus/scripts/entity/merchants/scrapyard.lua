@@ -16,7 +16,7 @@ local FS = '::' -- field separator
 -- general
 local libPath = "mods/ctccommon/scripts/lib"
 local basePath = "mods/" .. MODULE
-local modConfig = require(basePath .. '/config/' .. MODULE)
+local modConfig = require(basePath .. '/config')
 local requiredLibs = {'/serialize'} -- libs from 'ctccommon' which are required by this mod
 
 -- constants
