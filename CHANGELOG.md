@@ -1,7 +1,10 @@
 #### Version 1.4.0 *"profanatory-narcotisation"*
-* added travis.ci
+* added travis.ci chain
 * updated vanillacode to 0.19.x
 * removed duplicated vanilla code
+* refactored code-structure
+* split config and modinfo
+* added more testcases
 
 #### Version 1.3.2 *"kangaroolike-bowman"*
 * code-documentation

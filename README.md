@@ -1,8 +1,7 @@
 # ScrapyardPlus 
-## v1.4.0 *"profanatory-narcotisation"*
 
 [![Build Status](https://travis-ci.org/ctcDNightmare/avorion-scrapyardplus.svg?branch=master)](https://travis-ci.org/ctcDNightmare/avorion-scrapyardplus)
-___
+
 Your salvaging ops are longer then 60 minutes?  
 You want to get something in return for grinding all the precious reputation?  
 
@@ -10,8 +9,8 @@ With ScrapyardPlus you can:
 * buy up to 8 hours total (depending on your reputation)
 * increment your current license in variable intervals from 5 minutes all the way up to 3 hours per order
 * get discounts for bulk orders and your current standing with the owner of the scrapyard
-* earn a lifetime-license for yourself or your alliance an never have to bother with buying an extension again (lifetime status is granted faction-wide!)
-* configure all important things to suit your (or your servers) needs (``mods/ScrapyardPlus/config/ScrapyardPlus.lua``)
+* earn a lifetime-license for yourself or your alliance and never have to bother with buying an extension again (lifetime status is granted faction-wide!)
+* configure all important things to suit your (or your servers) needs (``mods/ScrapyardPlus/config.lua``)
 
 **This mod requires the [ctccommon](https://github.com/ctcDNightmare/avorion-ctccommon) libs to run.  
 It's included in every release but not the sources!** 
