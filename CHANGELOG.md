@@ -1,4 +1,4 @@
-#### Version 1.4.0 *"profanatory-narcotisation"*
+#### Version 1.4.1 *"profanatory-narcotisation"*
 * added travis.ci chain
 * updated vanillacode to 0.19.x
 * removed duplicated vanilla code
