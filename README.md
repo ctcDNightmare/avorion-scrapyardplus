@@ -1,6 +1,7 @@
 # ScrapyardPlus 
 
 [![Build Status](https://travis-ci.org/ctcDNightmare/avorion-scrapyardplus.svg?branch=master)](https://travis-ci.org/ctcDNightmare/avorion-scrapyardplus)
+[ ![Codeship Status for ctcDNightmare/avorion-scrapyardplus](https://app.codeship.com/projects/21b1c080-b156-0136-608f-02af9aea0ff6/status?branch=master)](https://app.codeship.com/projects/310567)
 
 Your salvaging ops are longer then 60 minutes?  
 You want to get something in return for grinding all the precious reputation?  
