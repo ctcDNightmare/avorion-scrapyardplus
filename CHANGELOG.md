@@ -1,3 +1,6 @@
+#### Version 1.4.3 *"unrecurrent-prehardener"*
+* add version script for build and deploy pipeline
+
 #### Version 1.4.2 *"simple-intro"*
 * update documentation
 
