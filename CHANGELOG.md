@@ -1,3 +1,6 @@
+#### Version 1.4.2 *"simple-intro"*
+* update documentation
+
 #### Version 1.4.1 *"profanatory-narcotisation"*
 * added travis.ci chain
 * updated vanillacode to 0.19.x
