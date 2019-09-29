@@ -11,23 +11,12 @@ With ScrapyardPlus you can:
 * increment your current license in variable intervals from 5 minutes all the way up to 3 hours per order
 * get discounts for bulk orders and your current standing with the owner of the scrapyard
 * earn a lifetime-license for yourself or your alliance and never have to bother with buying an extension again (lifetime status is granted faction-wide!)
-* configure all important things to suit your (or your servers) needs (``mods/ScrapyardPlus/config.lua``)
+* configure all important things to suit your (or your servers) needs (``data/config/scrapyardplus.lua``)
 
-**This mod requires the [ctccommon](https://github.com/ctcDNightmare/avorion-ctccommon) libs to run.  
-It's included in every release but not the sources!** 
+## Installation (without steam workshop)
+1. download & extract the [mod](https://github.com/ctcDNightmare/avorion-scrapyardplus/releases) into %AppData%\Avorion\mods\ folder on Windows or ~/.avorion/mods/ on Unix-based systems
 
-## Installation
-1. download & extract the [mod](https://github.com/ctcDNightmare/avorion-scrapyardplus/releases) into your Avorion folder
-
-2. insert the following code at the end of the original scrapyard file (``data/scripts/entity/merchants/scrapyard.lua``)
-```Lua
--- mod:ctcdnightmare/avorion-scrapyardplus:start
-if not pcall(require, "mods/ScrapyardPlus/scripts/entity/merchants/scrapyard") then print("Failed to load ScrapyardPlus") end
--- mod:ctcdnightmare/avorion-scrapyardplus:end
-```  
-**In case you are using the MoveUI-Mod from Dirtyredz as well, insert ScrapyardPlus before MoveUI!**
- 
-3. done
+2. done
 
 ## Default Config
 ___

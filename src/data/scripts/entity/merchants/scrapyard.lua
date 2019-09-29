@@ -1,41 +1,13 @@
-package.path = package.path .. ";data/scripts/lib/?.lua"
-include ("galaxy")
-include ("utility")
-include ("faction")
-include ("randomext")
-include ("callable")
-include ("weapontype")
-include ("stringutility")
-include ("goods")
-include ("reconstructiontoken")
-include ("weapontypeutility")
-include ("relations")
-local TurretIngredients = include("turretingredients")
-local SellableInventoryItem = include("sellableinventoryitem")
-local Dialog = include("dialogutility")
-
--- Don't remove or alter the following comment, it tells the game the namespace this script lives in. If you remove it, the script will break.
--- namespace Scrapyard
-
-Scrapyard.interactionThreshold = -30000
+include ("serialize")
+local modConfig = include('data/config/scrapyardplus')
 
 -- constants
 local MODULE = 'ScrapyardPlus' -- our module name
 local FS = '::' -- field separator
-
--- general
-local libPath = "mods/ctccommon/scripts/lib"
-local basePath = "mods/" .. MODULE
-local modConfig = require(basePath .. '/config')
-local requiredLibs = {'/serialize'} -- libs from 'ctccommon' which are required by this mod
-
--- constants
 local typeAlliance = 'ALLIANCE'
 local typeSolo = 'SOLO'
 
 -- server
-local licenses = {}
-local illegalActions = {}
 local legalActions = {}
 local newsBroadcastCounter = 0
 local highTrafficSystem = false
@@ -43,19 +15,7 @@ local highTrafficTimer = 0
 local disasterTimer = 0
 
 -- client
-local tabbedWindow = 0
-local planDisplayer = 0
-local sellButton = 0
-local sellWarningLabel = 0
-local uiMoneyValue = 0
-local visible = false
 local uiGroups = {}
-
--- turret tab
-local inventory = nil
-local scrapButton = nil
-local goodsLabels = {}
-
 
 -- solo license
 local currentSoloLicenseDurationLabel
@@ -71,61 +31,6 @@ local soloLifetimeStatusBar
 local currentSoloExp = 0
 local allianceLifetimeStatusBar
 local currentAllianceExp = 0
-
--- untouched but ported vanilla functions (running into upvalue issues etm)
--- this function gets called whenever the ui window gets rendered, AFTER the window was rendered (client only)
-function Scrapyard.renderUI()
-
-    if tabbedWindow:getActiveTab().name == "Sell Ship"%_t then
-        renderPrices(planDisplayer.lower + 20, "Ship Value:"%_t, uiMoneyValue, nil)
-    end
-end
-function Scrapyard.onDismantleTurretPressed()
-    local selected = inventory.selected
-    if selected then
-        invokeServerFunction("dismantleInventoryTurret", selected.index)
-    end
-end
-function Scrapyard.onTurretSelected()
-    local selected = inventory.selected
-    if not selected then return end
-    if not selected.item then return end
-
-    scrapButton.active = true
-
-    local _, possible = Scrapyard.getTurretGoods(selected.item)
-
-    for _, line in pairs(goodsLabels) do
-        line.icon:hide()
-    end
-
-    local i = 1
-    for _, good in pairs(possible) do
-        local line = goodsLabels[i]; i = i + 1
-        line.icon:show()
-
-        line.icon.picture = good.icon
-        line.icon.tooltip = good:displayName(10)
-    end
-end
-
-function Scrapyard.onTurretDeselected()
-    scrapButton.active = false
-
-    for _, line in pairs(goodsLabels) do
-        line.icon:hide()
-    end
-end
-
-function Scrapyard.onTurretDismantled()
-    local ship = Player().craft
-    if not ship then return end
-
-    inventory:fill(ship.factionIndex, InventoryItemType.Turret)
-end
-function Scrapyard.onSellButtonPressed()
-    invokeServerFunction("sellCraft")
-end
 
 -- modded vanilla functions
 function Scrapyard.onShowWindow()
@@ -153,7 +58,6 @@ function Scrapyard.onShowWindow()
 
     -- turrets
     inventory:fill(ship.factionIndex, InventoryItemType.Turret)
-
 end
 function Scrapyard.restore(data)
     -- clear earlier data
@@ -174,13 +78,6 @@ end
 function Scrapyard.initialize()
 
     if onServer() then
-        -- load required common libs
-        for _,lib in pairs(requiredLibs) do
-            if not pcall(require, libPath .. lib) then
-                print('failed loading ' .. lib)
-            end
-        end
-
         Sector():registerCallback("onHullHit", "onHullHit")
         local station = Entity()
         if station.title == "" then
@@ -520,7 +417,7 @@ function Scrapyard.updateServer(timeStep)
         if highTrafficTimer >= modConfig.highTrafficSpawntime * 60 then
             -- spawn new ship
             if station then
-                station:addScript(basePath .. '/scripts/events/ScrapyardPlus', 'high-traffic')
+                station:addScript('/scripts/events/scrapyardplus', 'high-traffic')
             end
             highTrafficTimer = 0
         end
@@ -532,7 +429,7 @@ function Scrapyard.updateServer(timeStep)
         local areWeInTrouble = math.random()
         -- maybe?!
         if station and areWeInTrouble <= modConfig.disasterChance then
-            station:addScript(basePath .. '/scripts/events/ScrapyardPlus', 'disaster')
+            station:addScript('/scripts/events/scrapyardplus', 'disaster')
         end
         disasterTimer = 0
     end
