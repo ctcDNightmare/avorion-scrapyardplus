@@ -1,0 +1,13 @@
+{
+  "name": "ctcdnightmare/avorion-scrapyardplus",
+  "version": "1.4.3",
+  "description": "Scrapyard Redefined",
+  "require": [
+    "dirtyredz/moveui"
+  ],
+  "script": {
+    "append": "if not pcall(require, \"mods/ScrapyardPlus/scripts/entity/merchants/scrapyard\") then print(\"Failed to load ScrapyardPlus\") end",
+    "end": "data/scripts/entity/merchants/scrapyard.lua"
+  },
+  "author": "DNightmare"
+}
