@@ -18,5 +18,4 @@ before_install:
   - luarocks install busted
 
 script:
-  - modman deploy-all
   - busted
