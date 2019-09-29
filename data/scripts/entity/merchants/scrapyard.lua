@@ -1,19 +1,28 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
-require ("galaxy")
-require ("utility")
-require ("faction")
-require ("randomext")
-require("stringutility")
-local Dialog = require("dialogutility")
+include ("galaxy")
+include ("utility")
+include ("faction")
+include ("randomext")
+include ("callable")
+include ("weapontype")
+include ("stringutility")
+include ("goods")
+include ("reconstructiontoken")
+include ("weapontypeutility")
+include ("relations")
+local TurretIngredients = include("turretingredients")
+local SellableInventoryItem = include("sellableinventoryitem")
+local Dialog = include("dialogutility")
 
 -- Don't remove or alter the following comment, it tells the game the namespace this script lives in. If you remove it, the script will break.
 -- namespace Scrapyard
 Scrapyard = {}
 
+Scrapyard.interactionThreshold = -30000
+
 -- server
 local licenses = {}
 local illegalActions = {}
-local newsBroadcastCounter = 0
 
 
 -- client
@@ -29,10 +38,15 @@ local licenseDuration = 0
 local uiMoneyValue = 0
 local visible = false
 
+-- turret tab
+local inventory = nil
+local scrapButton = nil
+local goodsLabels = {}
+
 -- if this function returns false, the script will not be listed in the interaction window on the client,
 -- even though its UI may be registered
 function Scrapyard.interactionPossible(playerIndex, option)
-    return CheckFactionInteraction(playerIndex, -10000)
+    return CheckFactionInteraction(playerIndex, Scrapyard.interactionThreshold)
 end
 
 function Scrapyard.restore(data)
@@ -67,7 +81,21 @@ function Scrapyard.initialize()
         EntityIcon().icon = "data/textures/icons/pixel/scrapyard_fat.png"
         InteractionText().text = Dialog.generateStationInteractionText(Entity(), random())
     end
+end
 
+function Scrapyard.initializationFinished()
+    -- use the initilizationFinished() function on the client since in initialize() we may not be able to access Sector scripts on the client
+    if onClient() then
+        local ok, r = Sector():invokeFunction("radiochatter", "addSpecificLines", Entity().id.string,
+        {
+            "Get a salvaging license now and try your luck with the wreckages!"%_t,
+            "Easy salvage, easy profit! Salvaging licenses for sale!"%_t,
+            "I'd like to see something brand new for once."%_t,
+            "Don't like your ship any more? We'll turn it to scrap and even give you some credits for it!"%_t,
+            "Brand new offer: We now dismantle turrets into parts!"%_t,
+            "We don't take any responsibility for any lost limbs while using the turret dismantler."%_t,
+        })
+    end
 end
 
 -- this function gets called on creation of the entity the script is attached to, on client only
@@ -89,7 +117,7 @@ function Scrapyard.initUI()
     tabbedWindow = mainWindow:createTabbedWindow(Rect(vec2(10, 10), size - 10))
 
     -- create a "Sell" tab inside the tabbed window
-    local sellTab = tabbedWindow:createTab("Sell Ship"%_t, "", "Sell your ship to the scrapyard"%_t)
+    local sellTab = tabbedWindow:createTab("Sell Ship"%_t, "data/textures/icons/sell-ship.png", "Sell your ship to the scrapyard"%_t)
     size = sellTab.size
 
     planDisplayer = sellTab:createPlanDisplayer(Rect(0, 0, size.x - 20, size.y - 60))
@@ -100,7 +128,7 @@ function Scrapyard.initUI()
     sellWarningLabel.color = ColorRGB(1, 1, 0)
 
     -- create a second tab
-    local salvageTab = tabbedWindow:createTab("Salvaging /*UI Tab title*/"%_t, "", "Buy a salvaging license"%_t)
+    local salvageTab = tabbedWindow:createTab("Salvaging /*UI Tab title*/"%_t, "data/textures/icons/recycle-arrows.png", "Buy a salvaging license"%_t)
     size = salvageTab.size -- not really required, all tabs have the same size
 
     local textField = salvageTab:createTextField(Rect(0, 0, size.x, 50), "You can buy a temporary salvaging license here. This license makes it legal to damage or mine wreckages in this sector."%_t)
@@ -129,6 +157,39 @@ function Scrapyard.initUI()
 
     timeLabel = salvageTab:createLabel(vec2(10, 310), "", fontSize)
 
+    -- create a tab for dismantling turrets
+    local turretTab = tabbedWindow:createTab("Turret Dismantling /*UI Tab title*/"%_t, "data/textures/icons/recycle-turret.png", "Dismantle turrets into goods"%_t)
+
+    local vsplit = UIHorizontalSplitter(Rect(turretTab.size), 10, 0, 0.17)
+    inventory = turretTab:createInventorySelection(vsplit.bottom, 10)
+
+    inventory.onSelectedFunction = "onTurretSelected"
+    inventory.onDeselectedFunction = "onTurretDeselected"
+
+    local lister = UIVerticalLister(vsplit.top, 10, 0)
+    scrapButton = turretTab:createButton(Rect(), "Dismantle"%_t, "onDismantleTurretPressed")
+    lister:placeElementTop(scrapButton)
+    scrapButton.active = false
+    scrapButton.width = 300
+
+    turretTab:createFrame(lister.rect)
+
+    lister:setMargin(10, 10, 10, 10)
+
+    local hlister = UIHorizontalLister(lister.rect, 10, 10)
+
+    for i = 1, 10 do
+        local rect = hlister:nextRect(30)
+        rect.height = rect.width
+
+        local pic = turretTab:createPicture(rect, "data/textures/icons/rocket.png")
+        pic:hide()
+        pic.isIcon = true
+
+        table.insert(goodsLabels, {icon = pic})
+
+    end
+
 end
 
 -- this function gets called whenever the ui window gets rendered, AFTER the window was rendered (client only)
@@ -141,7 +202,10 @@ end
 
 -- this function gets called every time the window is shown on the client, ie. when a player presses F and if interactionPossible() returned 1
 function Scrapyard.onShowWindow()
+    visible = true
+
     local ship = Player().craft
+    if not ship then return end
 
     -- get the plan of the player's ship
     local plan = ship:getPlan()
@@ -155,16 +219,64 @@ function Scrapyard.onShowWindow()
         sellWarningLabel:show()
     end
 
+    uiMoneyValue = Scrapyard.getShipValue(plan)
+
+    -- licenses
     priceLabel1.caption = "$${money}"%_t % {money = Scrapyard.getLicensePrice(Player(), 5)}
     priceLabel2.caption = "$${money}"%_t % {money = Scrapyard.getLicensePrice(Player(), 15)}
     priceLabel3.caption = "$${money}"%_t % {money = Scrapyard.getLicensePrice(Player(), 30)}
     priceLabel4.caption = "$${money}"%_t % {money = Scrapyard.getLicensePrice(Player(), 60)}
 
-    uiMoneyValue = Scrapyard.getShipValue(plan)
-
     Scrapyard.getLicenseDuration()
 
-    visible = true
+    -- turrets
+    inventory:fill(ship.factionIndex, InventoryItemType.Turret)
+
+end
+
+function Scrapyard.onDismantleTurretPressed()
+    local selected = inventory.selected
+    if selected then
+        invokeServerFunction("dismantleInventoryTurret", selected.index)
+    end
+end
+
+function Scrapyard.onTurretSelected()
+    local selected = inventory.selected
+    if not selected then return end
+    if not selected.item then return end
+
+    scrapButton.active = true
+
+    local _, possible = Scrapyard.getTurretGoods(selected.item)
+
+    for _, line in pairs(goodsLabels) do
+        line.icon:hide()
+    end
+
+    local i = 1
+    for _, good in pairs(possible) do
+        local line = goodsLabels[i]; i = i + 1
+        line.icon:show()
+
+        line.icon.picture = good.icon
+        line.icon.tooltip = good:displayName(10)
+    end
+end
+
+function Scrapyard.onTurretDeselected()
+    scrapButton.active = false
+
+    for _, line in pairs(goodsLabels) do
+        line.icon:hide()
+    end
+end
+
+function Scrapyard.onTurretDismantled()
+    local ship = Player().craft
+    if not ship then return end
+
+    inventory:fill(ship.factionIndex, InventoryItemType.Turret)
 end
 
 -- this function gets called every time the window is closed on the client
@@ -174,6 +286,7 @@ function Scrapyard.onCloseWindow()
 
     visible = false
 end
+
 
 function Scrapyard.onSellButtonPressed()
     invokeServerFunction("sellCraft")
@@ -246,13 +359,7 @@ end
 -- this function gets called once each frame, on server only
 function Scrapyard.updateServer(timeStep)
 
-    local station = Entity();
-
-    newsBroadcastCounter = newsBroadcastCounter + timeStep
-    if newsBroadcastCounter > 60 then
-        Sector():broadcastChatMessage(station.title, 0, "Get a salvaging license now and try your luck with the wreckages!"%_t)
-        newsBroadcastCounter = 0
-    end
+    local station = Entity()
 
     for factionIndex, actions in pairs(illegalActions) do
 
@@ -348,9 +455,9 @@ function Scrapyard.updateServer(timeStep)
             local x, y = Sector():getCoordinates()
             local coordinates = "${x}:${y}" % {x = x, y = y}
 
-            faction:sendChatMessage(station.title, 0, msg, coordinates)
+            faction:sendChatMessage(station, 0, msg, coordinates)
             if doubleSend then
-                faction:sendChatMessage(station.title, 2, msg, coordinates)
+                faction:sendChatMessage(station, 2, msg, coordinates)
             end
         end
 
@@ -360,6 +467,9 @@ function Scrapyard.updateServer(timeStep)
 end
 
 function Scrapyard.sellCraft()
+
+    if not CheckFactionInteraction(callingPlayer, Scrapyard.interactionThreshold) then return end
+
     local buyer, ship, player = getInteractingFaction(callingPlayer, AlliancePrivilege.ModifyCrafts, AlliancePrivilege.SpendResources)
     if not buyer then return end
 
@@ -369,6 +479,7 @@ function Scrapyard.sellCraft()
     -- Create Wreckage
     local position = ship.position
     local plan = ship:getMovePlan();
+    local name = ship.name
 
     -- remove the old craft
     Sector():deleteEntity(ship)
@@ -378,10 +489,16 @@ function Scrapyard.sellCraft()
 
     local wreckageIndex = Sector():createWreckage(plan, position)
 
-    buyer:receive(Format("Received %2% credits for %1% from a scrapyard."%_T, ship.name), moneyValue)
+    buyer:setShipDestroyed(name, true)
+    buyer:removeDestroyedShipInfo(name)
+
+    removeReconstructionTokens(buyer, name)
+
+    buyer:receive(Format("Received %2% credits for %1% from a scrapyard."%_T, ship.name, createMonetaryString(moneyValue)), moneyValue)
 
     invokeClientFunction(player, "transactionComplete")
 end
+callable(Scrapyard, "sellCraft")
 
 function Scrapyard.getShipValue(plan)
     local sum = plan:getMoneyValue()
@@ -397,6 +514,9 @@ function Scrapyard.getShipValue(plan)
 end
 
 function Scrapyard.buyLicense(duration)
+
+    if not CheckFactionInteraction(callingPlayer, Scrapyard.interactionThreshold) then return end
+
     duration = duration or 0
     if duration <= 0 then return end
 
@@ -409,7 +529,7 @@ function Scrapyard.buyLicense(duration)
 
     local canPay, msg, args = buyer:canPay(price)
     if not canPay then
-        player:sendChatMessage(station.title, 1, msg, unpack(args));
+        player:sendChatMessage(station, 1, msg, unpack(args));
         return;
     end
 
@@ -420,11 +540,12 @@ function Scrapyard.buyLicense(duration)
 
     -- send a message as response
     local minutes = licenses[buyer.index] / 60
-    player:sendChatMessage(station.title, 0, "You bought a %s minutes salvaging license."%_t, minutes);
-    player:sendChatMessage(station.title, 0, "%s cannot be held reliable for any damage to ships or deaths caused by salvaging."%_t, Faction().name);
+    player:sendChatMessage(station, 0, "You bought a %s minutes salvaging license."%_t, minutes);
+    player:sendChatMessage(station, 0, "%s cannot be held reliable for any damage to ships or deaths caused by salvaging."%_t, Faction().name);
 
     Scrapyard.sendLicenseDuration()
 end
+callable(Scrapyard, "buyLicense")
 
 function Scrapyard.sendLicenseDuration()
     local duration = licenses[callingPlayer]
@@ -433,11 +554,13 @@ function Scrapyard.sendLicenseDuration()
         invokeClientFunction(Player(callingPlayer), "setLicenseDuration", duration)
     end
 end
+callable(Scrapyard, "sendLicenseDuration")
 
 function Scrapyard.onHullHit(objectIndex, block, shootingCraftIndex, damage, position)
-    local object = Entity(objectIndex)
+    local sector = Sector()
+    local object = sector:getEntity(objectIndex)
     if object and object.isWreckage then
-        local shooter = Entity(shootingCraftIndex)
+        local shooter = sector:getEntity(shootingCraftIndex)
         if shooter then
             local faction = Faction(shooter.factionIndex)
             if not faction.isAIFaction and licenses[faction.index] == nil then
@@ -446,6 +569,124 @@ function Scrapyard.onHullHit(objectIndex, block, shootingCraftIndex, damage, pos
         end
     end
 end
+
+
+function Scrapyard.dismantleInventoryTurret(inventoryIndex)
+
+    if not CheckFactionInteraction(callingPlayer, Scrapyard.interactionThreshold) then return end
+
+    local buyer, ship, player = getInteractingFaction(callingPlayer, AlliancePrivilege.SpendItems, AlliancePrivilege.TakeItems)
+    if not buyer then return end
+
+    local inventory = buyer:getInventory()
+    local turret = inventory:find(inventoryIndex)
+    if not turret or turret.itemType ~= InventoryItemType.Turret then return end
+
+    local goods = Scrapyard.getTurretGoods(turret)
+
+    local totalSize = 0
+    for _, result in pairs(goods) do
+        totalSize = totalSize + result.amount + result.good.size
+    end
+
+    local cargoBay = CargoBay(ship)
+    if not cargoBay or cargoBay.freeSpace < totalSize then
+        player:sendChatMessage(Entity(), ChatMessageType.Error, "Not enough cargo space for all dismantled goods!")
+        return
+    end
+
+    inventory:take(inventoryIndex)
+
+    for _, result in pairs(goods) do
+        cargoBay:addCargo(result.good, result.amount)
+    end
+
+    invokeClientFunction(player, "onTurretDismantled")
+
+end
+callable(Scrapyard, "dismantleInventoryTurret")
+
+function Scrapyard.getTurretGoods(turret)
+    local item = SellableInventoryItem(turret)
+    local value = item.price * 0.1
+
+    local weaponType = WeaponTypes.getTypeOfItem(turret)
+
+    local gainable = table.deepcopy(TurretIngredients[weaponType]) or table.deepcopy(TurretIngredients[WeaponType.ChainGun])
+    local usedGoods = {}
+
+    table.insert(gainable, {name = "Scrap Metal"})
+    table.insert(gainable, {name = "Servo"})
+
+    for _, ingredient in pairs(gainable) do
+        ingredient.good = goods[ingredient.name]:good()
+        usedGoods[ingredient.good.name] = ingredient.good
+    end
+
+    local possibleGoods
+    local result = {}
+    result["Servo"] = 1
+
+    for i = 1, (3 + turret.rarity.value) do
+
+        -- remove all ingredients which, by themselves, would already be more expensive than the remaining value of the turret
+        for k, ingredient in pairs(gainable) do
+            if ingredient.good.price > value then
+                gainable[k] = nil
+            end
+        end
+
+        -- on first iteration, those goods are the ones that are technically possible
+        if not possibleGoods then
+            possibleGoods = {}
+
+            local added = {}
+            for k, ingredient in pairs(gainable) do
+                if not added[ingredient.name] then
+                    table.insert(possibleGoods, usedGoods[ingredient.name])
+                    added[ingredient.name] = true
+                end
+            end
+
+            if not added["Servo"] then
+                table.insert(possibleGoods, usedGoods["Servo"])
+            end
+        end
+
+        if tablelength(gainable) > 1 then
+            local weights = {}
+
+            for k, ingredient in pairs(gainable) do
+                weights[ingredient.name] = (ingredient.amount or 0) + 2
+            end
+            local name = selectByWeight(random(), weights)
+
+            local maxAmount = math.max(1, math.floor(value / usedGoods[name].price))
+            local gained = math.min(maxAmount, 5)
+
+            result[name] = (result[name] or 0) + gained
+
+            value = value - usedGoods[name].price * gained
+        else
+            for _, ingredient in pairs(gainable) do
+                local name = ingredient.name
+                local amount = math.max(1, math.floor(value / usedGoods[name].price))
+
+                result[name] = (result[name] or 0) + amount
+                break
+            end
+
+            break
+        end
+    end
+
+    for k, amount in pairs(result) do
+        result[k] = {name = k, amount = amount, good = usedGoods[k]}
+    end
+
+    return result, possibleGoods
+end
+
 
 function Scrapyard.unallowedDamaging(shooter, faction, damage)
 
@@ -475,44 +716,42 @@ function Scrapyard.unallowedDamaging(shooter, faction, damage)
 
     for _, player in pairs(pilots) do
         if actions < 10 and newActions >= 10 then
-            player:sendChatMessage(station.title, 0, "Salvaging or damaging wreckages in this sector is illegal. Please buy a salvaging license."%_t);
-            player:sendChatMessage(station.title, 2, "You need a salvaging license for this sector."%_t);
+            player:sendChatMessage(station, 0, "Salvaging or damaging wreckages in this sector is illegal. Please buy a salvaging license."%_t);
+            player:sendChatMessage(station, 2, "You need a salvaging license for this sector."%_t);
         end
 
         if actions < 200 and newActions >= 200 then
-            player:sendChatMessage(station.title, 0, "Salvaging wreckages in this sector is forbidden. Please buy a salvaging license."%_t);
-            player:sendChatMessage(station.title, 2, "You need a salvaging license for this sector."%_t);
+            player:sendChatMessage(station, 0, "Salvaging wreckages in this sector is forbidden. Please buy a salvaging license."%_t);
+            player:sendChatMessage(station, 2, "You need a salvaging license for this sector."%_t);
         end
 
         if actions < 500 and newActions >= 500 then
-            player:sendChatMessage(station.title, 0, "Wreckages in this sector are the property of %s. Please buy a salvaging license."%_t, Faction().name);
-            player:sendChatMessage(station.title, 2, "You need a salvaging license for this sector."%_t);
+            player:sendChatMessage(station, 0, "Wreckages in this sector are the property of %s. Please buy a salvaging license."%_t, Faction().name);
+            player:sendChatMessage(station, 2, "You need a salvaging license for this sector."%_t);
         end
 
         if actions < 1000 and newActions >= 1000 then
-            player:sendChatMessage(station.title, 0, "Illegal salvaging will be punished by destruction. Buy a salvaging license or there will be consequences."%_t);
-            player:sendChatMessage(station.title, 2, "You need a salvaging license for this sector."%_t);
+            player:sendChatMessage(station, 0, "Illegal salvaging will be punished by destruction. Buy a salvaging license or there will be consequences."%_t);
+            player:sendChatMessage(station, 2, "You need a salvaging license for this sector."%_t);
         end
 
         if actions < 1500 and newActions >= 1500 then
-            player:sendChatMessage(station.title, 0, "This is your last warning. If you do not stop salvaging without a license, you will be destroyed."%_t);
-            player:sendChatMessage(station.title, 2, "You need a salvaging license for this sector."%_t);
+            player:sendChatMessage(station, 0, "This is your last warning. If you do not stop salvaging without a license, you will be destroyed."%_t);
+            player:sendChatMessage(station, 2, "You need a salvaging license for this sector."%_t);
         end
 
         if actions < 2000 and newActions >= 2000 then
-            player:sendChatMessage(station.title, 0, "You have been warned. You will be considered an enemy of %s if you do not stop your illegal activities."%_t, Faction().name);
-            player:sendChatMessage(station.title, 2, "You need a salvaging license for this sector."%_t);
+            player:sendChatMessage(station, 0, "You have been warned. You will be considered an enemy of %s if you do not stop your illegal activities."%_t, Faction().name);
+            player:sendChatMessage(station, 2, "You need a salvaging license for this sector."%_t);
         end
     end
 
     if newActions > 5 then
-        Galaxy():changeFactionRelations(Faction(), faction, -newActions / 100)
+        changeRelations(Faction(), faction, -newActions / 100, RelationChangeType.GeneralIllegal)
     end
 
     illegalActions[faction.index] = newActions
 
 end
 
--- mod:ctcdnightmare/avorion-scrapyardplus:start
-if not pcall(require, "mods/ScrapyardPlus/scripts/entity/merchants/scrapyard") then print("Failed to load ScrapyardPlus") end
--- mod:ctcdnightmare/avorion-scrapyardplus:end
+

@@ -1,13 +1,23 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
-require ("galaxy")
-require ("utility")
-require ("faction")
-require ("randomext")
-require("stringutility")
-local Dialog = require("dialogutility")
+include ("galaxy")
+include ("utility")
+include ("faction")
+include ("randomext")
+include ("callable")
+include ("weapontype")
+include ("stringutility")
+include ("goods")
+include ("reconstructiontoken")
+include ("weapontypeutility")
+include ("relations")
+local TurretIngredients = include("turretingredients")
+local SellableInventoryItem = include("sellableinventoryitem")
+local Dialog = include("dialogutility")
 
 -- Don't remove or alter the following comment, it tells the game the namespace this script lives in. If you remove it, the script will break.
 -- namespace Scrapyard
+
+Scrapyard.interactionThreshold = -30000
 
 -- constants
 local MODULE = 'ScrapyardPlus' -- our module name
@@ -41,6 +51,11 @@ local uiMoneyValue = 0
 local visible = false
 local uiGroups = {}
 
+-- turret tab
+local inventory = nil
+local scrapButton = nil
+local goodsLabels = {}
+
 
 -- solo license
 local currentSoloLicenseDurationLabel
@@ -57,9 +72,67 @@ local currentSoloExp = 0
 local allianceLifetimeStatusBar
 local currentAllianceExp = 0
 
+-- untouched but ported vanilla functions (running into upvalue issues etm)
+-- this function gets called whenever the ui window gets rendered, AFTER the window was rendered (client only)
+function Scrapyard.renderUI()
+
+    if tabbedWindow:getActiveTab().name == "Sell Ship"%_t then
+        renderPrices(planDisplayer.lower + 20, "Ship Value:"%_t, uiMoneyValue, nil)
+    end
+end
+function Scrapyard.onDismantleTurretPressed()
+    local selected = inventory.selected
+    if selected then
+        invokeServerFunction("dismantleInventoryTurret", selected.index)
+    end
+end
+function Scrapyard.onTurretSelected()
+    local selected = inventory.selected
+    if not selected then return end
+    if not selected.item then return end
+
+    scrapButton.active = true
+
+    local _, possible = Scrapyard.getTurretGoods(selected.item)
+
+    for _, line in pairs(goodsLabels) do
+        line.icon:hide()
+    end
+
+    local i = 1
+    for _, good in pairs(possible) do
+        local line = goodsLabels[i]; i = i + 1
+        line.icon:show()
+
+        line.icon.picture = good.icon
+        line.icon.tooltip = good:displayName(10)
+    end
+end
+
+function Scrapyard.onTurretDeselected()
+    scrapButton.active = false
+
+    for _, line in pairs(goodsLabels) do
+        line.icon:hide()
+    end
+end
+
+function Scrapyard.onTurretDismantled()
+    local ship = Player().craft
+    if not ship then return end
+
+    inventory:fill(ship.factionIndex, InventoryItemType.Turret)
+end
+function Scrapyard.onSellButtonPressed()
+    invokeServerFunction("sellCraft")
+end
+
 -- modded vanilla functions
 function Scrapyard.onShowWindow()
+    visible = true
+
     local ship = Player().craft
+    if not ship then return end
 
     -- get the plan of the player's ship
     local plan = ship:getPlan()
@@ -78,7 +151,9 @@ function Scrapyard.onShowWindow()
     Scrapyard.getCurrentExperience()
     Scrapyard.getLicenseDuration()
 
-    visible = true
+    -- turrets
+    inventory:fill(ship.factionIndex, InventoryItemType.Turret)
+
 end
 function Scrapyard.restore(data)
     -- clear earlier data
@@ -152,7 +227,7 @@ function Scrapyard.initUI()
     tabbedWindow = mainWindow:createTabbedWindow(Rect(vec2(10, 10), size - 10))
 
     -- create a "Sell" tab inside the tabbed window
-    local sellTab = tabbedWindow:createTab("Sell Ship" % _t, "", "Sell your ship to the scrapyard" % _t)
+    local sellTab = tabbedWindow:createTab("Sell Ship" % _t, "data/textures/icons/sell-ship.png", "Sell your ship to the scrapyard" % _t)
     size = sellTab.size
 
     planDisplayer = sellTab:createPlanDisplayer(Rect(0, 0, size.x - 20, size.y - 60))
@@ -161,6 +236,39 @@ function Scrapyard.initUI()
     sellButton = sellTab:createButton(Rect(0, size.y - 40, 150, size.y), "Sell Ship" % _t, "onSellButtonPressed")
     sellWarningLabel = sellTab:createLabel(vec2(200, size.y - 30), "Warning! You will not get refunds for crews or turrets!" % _t, 15)
     sellWarningLabel.color = ColorRGB(1, 1, 0)
+
+    -- create a tab for dismantling turrets
+    local turretTab = tabbedWindow:createTab("Turret Dismantling /*UI Tab title*/"%_t, "data/textures/icons/recycle-turret.png", "Dismantle turrets into goods"%_t)
+
+    local vsplit = UIHorizontalSplitter(Rect(turretTab.size), 10, 0, 0.17)
+    inventory = turretTab:createInventorySelection(vsplit.bottom, 10)
+
+    inventory.onSelectedFunction = "onTurretSelected"
+    inventory.onDeselectedFunction = "onTurretDeselected"
+
+    local lister = UIVerticalLister(vsplit.top, 10, 0)
+    scrapButton = turretTab:createButton(Rect(), "Dismantle"%_t, "onDismantleTurretPressed")
+    lister:placeElementTop(scrapButton)
+    scrapButton.active = false
+    scrapButton.width = 300
+
+    turretTab:createFrame(lister.rect)
+
+    lister:setMargin(10, 10, 10, 10)
+
+    local hlister = UIHorizontalLister(lister.rect, 10, 10)
+
+    for i = 1, 10 do
+        local rect = hlister:nextRect(30)
+        rect.height = rect.width
+
+        local pic = turretTab:createPicture(rect, "data/textures/icons/rocket.png")
+        pic:hide()
+        pic.isIcon = true
+
+        table.insert(goodsLabels, {icon = pic})
+
+    end
 
     Scrapyard.createSoloTab()
 
@@ -800,6 +908,7 @@ function Scrapyard.checkLifetime(playerIndex)
         end
     end
 end
+callable(Scrapyard, "checkLifetime")
 
 --- getMaxLicenseDuration
 -- Based on current reputation return the current maximum duration a player can accumulate
@@ -865,6 +974,7 @@ function Scrapyard.sendCurrentExperience()
 
     invokeClientFunction(Player(callingPlayer), "setCurrentExperience",  playerExperience[Faction().index], allianceExperience[Faction().index])
 end
+callable(Scrapyard, "sendCurrentExperience")
 
 --- loadExperience
 -- Deserialize load and sanity-check current experience from given faction
