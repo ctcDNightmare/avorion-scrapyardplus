@@ -1,2 +1,2 @@
-require "modinfo"
+require "src/modinfo"
 print(meta.version)
