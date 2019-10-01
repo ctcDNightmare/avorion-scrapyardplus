@@ -1,0 +1,32 @@
+msgid "High Traffic Scrapyard"
+msgstr "Sehr stark genutzter Schrottplatz"
+
+msgid "Your %s salvaging license will run out in %s."
+msgstr "Deine %s Abwracklizenz wird in %s ablaufen."
+
+msgid "Your %s salvaging license in %s will run out in %s."
+msgstr "Deine %s Abwracklizenz in %s wird in %s ablaufen."
+
+msgid "Your %s salvaging license will run out in %s. Renew it NOW and save yourself some trouble!"
+msgstr "Deine %s Abwracklizenz Wird in %s ablaufen. Erneuere sie JETZT um dir Ärger zu ersparen!"
+
+msgid "Your %s salvaging license in %s will run out in %s. Renew it NOW and save yourself some trouble!"
+msgstr "Deine %s Abwracklizenz in %s wird in %s ablaufen. Erneuere sie JETZT um dir Ärger zu ersparen!"
+
+msgid "Your %s salvaging license will run out in %s. Renew it immediately and save yourself some trouble!"
+msgstr "Deine %s Abwracklizenz wird in %s ablaufen. Erneuere sie umgehend um die Ärger zu ersparen!"
+
+msgid "Your %s salvaging license in %s will run out in %s. Renew it immediately and save yourself some trouble!"
+msgstr "Deine %s Abwracklizenz in %s wird in %s ablaufen. Erneuere sie umgehend um die Ärger zu ersparen!"
+
+msgid "Your %s salvaging license will run out in %s. Don't forget to renew it in time!"
+msgstr "Deine %s Abwracklizenz wird in %s ablaufen. Denk daran sie rechtzeitig zu verlängern!"
+
+msgid "Your %s salvaging license in %s will run out in %s. Don't forget to renew it in time!"
+msgstr "Deine %s Abwracklizenz in %s wird in %s ablaufen. Denk daran sie rechtzeitig zu verlängern!"
+
+msgid "Your %s salvaging license expired. You may no longer salvage in this area."
+msgstr "Deine %s Abwracklizenz ist abgelaufen. Du darfst in dieser Gegend keine Schiffe mehr abwracken."
+
+msgid "Your %s salvaging license in %s expired. You may no longer salvage in this area."
+msgstr "Deine %s Abwracklizenz in %s ist abgelaufen. Due darfst in dieser Gegend keine Schiffe mehr abwracken."

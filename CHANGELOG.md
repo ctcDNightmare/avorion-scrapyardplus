@@ -1,3 +1,8 @@
+#### Version 2.0.0 *""xenomorphic-cobblestone"*
+* make mod compatible with steam workshop
+* update code to latest (0.26.1) game version
+* merge ctccommon into this mod
+
 #### Version 1.4.3 *"unrecurrent-prehardener"*
 * add version script for build and deploy pipeline
 
