@@ -23,7 +23,7 @@ describe("meta", function()
 
         it("version information", function()
             assert.is_string(meta.version)
-            assert.same("2.0", meta.version)
+            assert.same("2.0.1", meta.version)
         end)
     end)
 end)
