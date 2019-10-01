@@ -1,4 +1,7 @@
-#### Version 2.0.0 *""xenomorphic-cobblestone"*
+#### Version 2.0.1 *"antarctic-spine"
+* fix build pipeline
+
+#### Version 2.0.0 *"xenomorphic-cobblestone"*
 * make mod compatible with steam workshop
 * update code to latest (0.26.1) game version
 * merge ctccommon into this mod
