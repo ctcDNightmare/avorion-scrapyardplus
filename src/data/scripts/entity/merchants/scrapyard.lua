@@ -34,7 +34,6 @@ local currentAllianceExp = 0
 
 -- modded vanilla functions
 function Scrapyard.onShowWindow()
-    visible = true
 
     local ship = Player().craft
     if not ship then return end
@@ -58,6 +57,8 @@ function Scrapyard.onShowWindow()
 
     -- turrets
     inventory:fill(ship.factionIndex, InventoryItemType.Turret)
+
+    visible = true
 end
 function Scrapyard.restore(data)
     -- clear earlier data
