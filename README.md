@@ -54,11 +54,11 @@ config.disasterSpawnTime = 20 -- [Default: 30] Time (in minutes) how often it's 
 ```
 
 ## Screenshots
-*Solo player with good reputation*
-![Lone wolf with good relations](https://i.imgur.com/hp9nsGU.jpg)  
+*Solo player after getting his first license*  
+![Solo player after getting his first license](https://i.imgur.com/Gu3EqTQ.jpg)  
 
 *Alliance player with normal reputation*  
-![Alliance player with normal relations](https://i.imgur.com/KU8JH3A.jpg)  
+![Alliance player with normal relations](https://i.imgur.com/lUCRjTm.jpg)  
 
 *Nearly reached lifetime status but lost reputation before finishing it*  
 ![Nearly there!](https://i.imgur.com/8amcRQZ.jpg)
@@ -83,3 +83,4 @@ http://www.avorion.net/forum/index.php/topic,3850.0.html
 
 ## Mentions & shoutouts
 - [Dirtyredz](https://github.com/dirtyredz) - He got me into modding for Avorion with his [MoveUI-Mod](http://www.avorion.net/forum/index.php/topic,3834.0.html) and now we are even working together on each others mods to further improve our knowledge
+- [slxsh](https://github.com/slxsh) - For creating the two license icons 
