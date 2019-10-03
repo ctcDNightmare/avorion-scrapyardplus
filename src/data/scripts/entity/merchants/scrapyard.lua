@@ -561,7 +561,7 @@ end
 -- Create all relevant UIElements for the solo-license tab
 function Scrapyard.createSoloTab()
     -- create a second tab
-    local licenseTab = tabbedWindow:createTab("Private /*UI Tab title*/" % _t, "", "Buy a personal salvaging license" % _t)
+    local licenseTab = tabbedWindow:createTab("Private /*UI Tab title*/" % _t, "data/textures/icons/scrapyardplus-license-solo.png", "Buy a personal salvaging license" % _t)
     local size = licenseTab.size -- not really required, all tabs have the same size
 
     local fontSize = 18
@@ -674,7 +674,7 @@ end
 --- createAllianceTab
 -- Create all relevant UIElements for the alliance-license tab
 function Scrapyard.createAllianceTab()
-    local allianceTab = tabbedWindow:createTab("Alliance /*UI Tab title*/" % _t, "", "Buy a salvaging license for your alliance" % _t)
+    local allianceTab = tabbedWindow:createTab("Alliance /*UI Tab title*/" % _t, "data/textures/icons/scrapyardplus-license-alliance.png", "Buy a salvaging license for your alliance" % _t)
     local size = allianceTab.size -- not really required, all tabs have the same size
 
     local fontSize = 18
