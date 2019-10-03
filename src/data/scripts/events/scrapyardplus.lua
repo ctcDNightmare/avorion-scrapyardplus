@@ -77,27 +77,27 @@ function events.scrapperStageOne()
     local toBeCreated = math.random(0, 100)
 
     if toBeCreated == 100 then -- dreadnought
-        print('dreadnought wreck incoming')
+        print('Spawning new Wreck: Dreadnought')
     end
 
     if toBeCreated > 95 and toBeCreated <= 99 then -- battleship
-        print('battleship wreck incoming')
+        print('Spawning new Wreck: Battleship')
     end
 
     if toBeCreated > 85 and toBeCreated <= 95 then -- destroyer
-        print('destroyer wreck incoming')
+        print('Spawning new Wreck: Destroyer')
     end
 
     if toBeCreated > 65 and toBeCreated <= 85 then -- cruiser
-        print('cruiser wreck incoming')
+        print('Spawning new Wreck: Cruiser')
     end
 
     if toBeCreated > 15 and toBeCreated <= 65 then -- frigate
-        print('frigate wreck incoming')
+        print('Spawning new Wreck: Frigate')
     end
 
     if toBeCreated <= 15 then -- transport
-        print('transport wreck incoming')
+        print('Spawning new Wreck: Transport')
     end
 
     nextStep = 'scrapperStageTwo' -- always set the next event or nil

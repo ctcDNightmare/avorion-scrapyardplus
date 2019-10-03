@@ -8,11 +8,11 @@ local typeAlliance = 'ALLIANCE'
 local typeSolo = 'SOLO'
 
 -- server
-local legalActions = {}
-local newsBroadcastCounter = 0
-local highTrafficSystem = false
-local highTrafficTimer = 0
-local disasterTimer = 0
+local legalActions
+local newsBroadcastCounter
+local highTrafficSystem
+local highTrafficTimer
+local disasterTimer
 
 -- client
 local uiGroups = {}
@@ -66,6 +66,7 @@ function Scrapyard.restore(data)
     illegalActions = data.illegalActions
     legalActions = data.legalActions
     highTrafficSystem = data.highTrafficSystem
+    Scrapyard.debug("Restoring data: " .. serialize(data))
 end
 function Scrapyard.secure()
     -- save licenses
@@ -74,29 +75,29 @@ function Scrapyard.secure()
     data.illegalActions = illegalActions
     data.legalActions = legalActions
     data.highTrafficSystem = highTrafficSystem
+    Scrapyard.debug("Securing data: " .. serialize(data))
     return data
 end
 function Scrapyard.initialize()
 
     if onServer() then
+        Scrapyard.debug("Initializing data on server")
+        legalActions = {}
+        newsBroadcastCounter = 0
+        highTrafficSystem = nil
+        highTrafficTimer = 0
+        disasterTimer = 0
+
         Sector():registerCallback("onHullHit", "onHullHit")
         local station = Entity()
         if station.title == "" then
             station.title = "Scrapyard"%_t
         end
 
-        local isHighTraffic = math.random()
-        if highTrafficSystem == nil and isHighTraffic <= modConfig.highTrafficChance
-        then
-            highTrafficSystem = true
-        else
-            highTrafficSystem = false
-        end
-
         -- check for lifetime reached
         local experience = Scrapyard.loadExperience(Faction().index)
         local lifetimeReached = (experience[Faction().index] >= modConfig.lifetimeExpRequired)
-
+        Scrapyard.debug("experience: " .. serialize(experience) .. " / lifetimeReached: " .. tostring(lifetimeReached))
     end
 
     if onClient() then
@@ -208,23 +209,23 @@ function Scrapyard.updateClient(timeStep)
     end
     if visible then
         if soloLifetime then
-            currentSoloLicenseDurationLabel.caption = "Never (lifetime license)" % _t
+            currentSoloLicenseDurationLabel.caption = "Never (lifetime license)"%_t
         else
             if soloLicenseDuration > 0 then
-                currentSoloLicenseDurationLabel.caption = "${time}" % _t % { time = createReadableTimeString(soloLicenseDuration) }
+                currentSoloLicenseDurationLabel.caption = "${time}" % { time = createReadableTimeString(soloLicenseDuration) }
             else
-                currentSoloLicenseDurationLabel.caption = "No license found." % _t
+                currentSoloLicenseDurationLabel.caption = "No license found."%_t
             end
         end
 
         if hasAlliance then
             if allianceLifetime then
-                currentAllianceLicenseDurationLabel.caption = "Never (lifetime license)" % _t
+                currentAllianceLicenseDurationLabel.caption = "Never (lifetime license)"%_t
             else
                 if allianceLicenseDuration > 0 then
-                    currentAllianceLicenseDurationLabel.caption = "${time}" % _t % { time = createReadableTimeString(allianceLicenseDuration) }
+                    currentAllianceLicenseDurationLabel.caption = "${time}" % { time = createReadableTimeString(allianceLicenseDuration) }
                 else
-                    currentAllianceLicenseDurationLabel.caption = "No license found." % _t
+                    currentAllianceLicenseDurationLabel.caption = "No license found."%_t
                 end
             end
         end
@@ -401,8 +402,17 @@ function Scrapyard.updateServer(timeStep)
 
     local station = Entity();
 
-    if highTrafficSystem == true then
-        station.title = "High Traffic Scrapyard"%_t
+    if highTrafficSystem == nil then
+        Scrapyard.debug("Checking if isHighTraffic-System")
+        local isHighTraffic = math.random()
+        if isHighTraffic <= modConfig.highTrafficChance then
+            Scrapyard.debug(isHighTraffic .. " < " .. modConfig.highTrafficChance .. " -> HighTrafficSystem found!")
+            station.title = "High Traffic Scrapyard"%_t
+            highTrafficSystem = true
+        else
+            Scrapyard.debug(isHighTraffic .. " > " .. modConfig.highTrafficChance .. " -> Normal System.")
+            highTrafficSystem = false
+        end
     end
 
     -- local advertisement
@@ -415,10 +425,11 @@ function Scrapyard.updateServer(timeStep)
     -- we need more minerals
     if highTrafficSystem and modConfig.enableRegen then
         highTrafficTimer = highTrafficTimer + timeStep
-        if highTrafficTimer >= modConfig.highTrafficSpawntime * 60 then
+        if highTrafficTimer >= modConfig.regenSpawntime * 60 then
+            Scrapyard.debug("Time is up, creating new event for high-traffic system")
             -- spawn new ship
             if station then
-                station:addScript('/scripts/events/scrapyardplus', 'high-traffic')
+                station:addScript('data/scripts/events/scrapyardplus', 'high-traffic')
             end
             highTrafficTimer = 0
         end
@@ -427,10 +438,11 @@ function Scrapyard.updateServer(timeStep)
     -- let's wreak some havoc
     disasterTimer = disasterTimer + timeStep
     if disasterTimer >= modConfig.disasterSpawnTime * 60 and modConfig.enableDisasters then
+        Scrapyard.debug("Time is up, checking for a possible disaster")
         local areWeInTrouble = math.random()
         -- maybe?!
         if station and areWeInTrouble <= modConfig.disasterChance then
-            station:addScript('/scripts/events/scrapyardplus', 'disaster')
+            station:addScript('data/scripts/events/scrapyardplus', 'disaster')
         end
         disasterTimer = 0
     end
@@ -821,7 +833,7 @@ end
 --- notifyFaction
 -- Helper to notify all online players of given faction
 function Scrapyard.notifyFaction(factionIndex, channel,  message, sender)
-    
+
     local faction = Faction(factionIndex)
     if faction.isPlayer then
         Player(factionIndex):sendChatMessage(sender, channel, message);
@@ -949,4 +961,9 @@ function Scrapyard.allowedDamaging(faction)
 
     end
     legalActions[faction.index] = actions
+end
+function Scrapyard.debug(message)
+    if modConfig.enableDebug == true then
+        print(MODULE .. FS .. "DEBUG: " .. message)
+    end
 end

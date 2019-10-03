@@ -1,3 +1,9 @@
+msgid "Never (lifetime license)"
+msgstr "Nie (Lizenz auf Lebenszeit)"
+
+msgid "No license found."
+msgstr "Keine Lizenz gefunden."
+
 msgid "High Traffic Scrapyard"
 msgstr "Sehr stark genutzter Schrottplatz"
 
