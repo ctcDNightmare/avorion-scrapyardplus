@@ -10,7 +10,7 @@ env:
 
 branches:
   except:
-    - slave
+    - develop
     - /^release-.*$/
 
 before_install:
