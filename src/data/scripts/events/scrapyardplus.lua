@@ -1,4 +1,8 @@
 if (not onServer()) then return end
+package.path = package.path .. ";data/scripts/lib/?.lua"
+package.path = package.path .. ";data/scripts/?.lua"
+SectorGenerator = include ("SectorGenerator")
+PlanGenerator = include ("plangenerator")
 
 -- namespace ScrapyardPlus
 ScrapyardPlus = {}
@@ -8,6 +12,33 @@ local eventFinished = false
 local nextStep
 local timer = 0
 local events = {}
+
+local shiptypes = {
+    battleship = {
+        name = "Battleship"%_t,
+        volume = 50000
+    },
+    dreadnought = {
+        name = "Dreadnought"%_t,
+        volume = 32000
+    },
+    destroyer = {
+        name = "Destroyer"%_t,
+        volume = 20000
+    },
+    cruiser = {
+        name = "Cruiser"%_t,
+        volume = 15000
+    },
+    frigate = {
+        name = "Frigate"%_t,
+        volume = 7500
+    },
+    corvette = {
+        name = "Corvette"%_t,
+        volume = 2500
+    }
+}
 
 function ScrapyardPlus.getUpdateInterval()
     return 1
@@ -62,61 +93,50 @@ function ScrapyardPlus.initEventTypes()
     eventTypes['disaster'] = events.disasterStageOne
 end
 
+function events.getNewWreck()
+    local toBeCreated = math.random(0, 100)
+    if toBeCreated == 100 then -- battleship
+        return shiptypes.battleship
+    end
+
+    if toBeCreated > 95 and toBeCreated <= 99 then -- dreadnought
+        return shiptypes.dreadnought
+    end
+
+    if toBeCreated > 85 and toBeCreated <= 95 then -- destroyer
+        return shiptypes.destroyer
+    end
+
+    if toBeCreated > 65 and toBeCreated <= 85 then -- cruiser
+        return shiptypes.cruiser
+    end
+
+    if toBeCreated > 15 and toBeCreated <= 65 then -- frigate
+        return shiptypes.frigate
+    end
+
+    if toBeCreated <= 15 then -- corvette
+        return shiptypes.corvette
+    end
+end
+
 --- events
 -- scrapper aka sell a ship to the scrapyard
 -- todo: jump in with towed ship, talk, fly, talk/sell, jump out with towing ship only, convert towed ship to wreck
 function events.scrapperStageOne()
-    local greetings = {
-        "Howdy partner, look what I've found just outside the system. How much you payin' for it?",
-        "Bleep blep!",
-        "Yo! Interested in some fresh goodies?"
-    }
+    local station = Entity()
+    local faction = Faction(station.factionIndex)
+    local wreck = events.getNewWreck()
 
-    Sector():broadcastChatMessage('Scrapper', 0, greetings[math.random(1, #greetings)])
+    Sector():broadcastChatMessage(station.title, 0, string.format("Oh look, a %s wreck just got dropped off at my Scrapyard!"%_t, wreck.name))
 
-    local toBeCreated = math.random(0, 100)
+    local generator = SectorGenerator(Sector():getCoordinates())
+    local material = PlanGenerator.selectMaterial(faction)
+    local style = PlanGenerator.selectShipStyle(faction)
+    local plan = PlanGenerator.makeShipPlan(faction, wreck.volume, style, material)
 
-    if toBeCreated == 100 then -- dreadnought
-        print('dreadnought wreck incoming')
-    end
+    generator:createUnstrippedWreckage(faction, plan)
 
-    if toBeCreated > 95 and toBeCreated <= 99 then -- battleship
-        print('battleship wreck incoming')
-    end
-
-    if toBeCreated > 85 and toBeCreated <= 95 then -- destroyer
-        print('destroyer wreck incoming')
-    end
-
-    if toBeCreated > 65 and toBeCreated <= 85 then -- cruiser
-        print('cruiser wreck incoming')
-    end
-
-    if toBeCreated > 15 and toBeCreated <= 65 then -- frigate
-        print('frigate wreck incoming')
-    end
-
-    if toBeCreated <= 15 then -- transport
-        print('transport wreck incoming')
-    end
-
-    nextStep = 'scrapperStageTwo' -- always set the next event or nil
-end
-
-function events.scrapperStageTwo()
-    local delay = 5
-    if timer < delay then -- wait before continue
-        return
-    else
-        timer = 0
-    end
-
-    local goodbye = {
-        "kthxbye!",
-        "Fly safe.",
-        "o/ byebye"
-    }
-    Sector():broadcastChatMessage('Scrapper', 0, goodbye[math.random(1, #goodbye)])
 
     nextStep = nil -- always set the next event or nil
 end
@@ -133,7 +153,3 @@ function events.disasterStageOne()
 
     nextStep = nil -- always set the next event or nil
 end
-
-
-
-
