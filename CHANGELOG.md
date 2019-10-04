@@ -1,3 +1,10 @@
+#### Version 2.1.0 *"immunogenetical-transfashion"
+* fix issues with alliance license
+* add spawning of new wrecks in high-traffic systems (*finally!*)
+* add new icons for solo & alliance licenses
+* add more translations
+* enable high traffic systems by default
+
 #### Version 2.0.1 *"antarctic-spine"
 * fix build pipeline
 
