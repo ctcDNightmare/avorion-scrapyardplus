@@ -3,6 +3,8 @@ if (not onServer()) then return end
 -- namespace ScrapyardPlus
 ScrapyardPlus = {}
 
+local SectorGenerator = include ("SectorGenerator")
+local PlanGenerator = include("plangenerator")
 local eventTypes = {}
 local eventFinished = false
 local nextStep
@@ -66,57 +68,46 @@ end
 -- scrapper aka sell a ship to the scrapyard
 -- todo: jump in with towed ship, talk, fly, talk/sell, jump out with towing ship only, convert towed ship to wreck
 function events.scrapperStageOne()
-    local greetings = {
-        "Howdy partner, look what I've found just outside the system. How much you payin' for it?",
-        "Bleep blep!",
-        "Yo! Interested in some fresh goodies?"
-    }
-
-    Sector():broadcastChatMessage('Scrapper', 0, greetings[math.random(1, #greetings)])
+    local station = Entity()
+    local faction = Faction(station.factionIndex)
+    local generator = SectorGenerator(Sector():getCoordinates())
+    local volume = 0
 
     local toBeCreated = math.random(0, 100)
-
-    if toBeCreated == 100 then -- dreadnought
-        print('Spawning new Wreck: Dreadnought')
+    if toBeCreated == 100 then -- battleship
+        print('HIGH TRAFFIC SYSTEM // Spawning new Wreck: Battleship')
+        volume = 50000
     end
 
-    if toBeCreated > 95 and toBeCreated <= 99 then -- battleship
-        print('Spawning new Wreck: Battleship')
+    if toBeCreated > 95 and toBeCreated <= 99 then -- dreadnought
+        print('HIGH TRAFFIC SYSTEM // Spawning new Wreck: Dreadnought')
+        volume = 32000
     end
 
     if toBeCreated > 85 and toBeCreated <= 95 then -- destroyer
-        print('Spawning new Wreck: Destroyer')
+        print('HIGH TRAFFIC SYSTEM // Spawning new Wreck: Destroyer')
+        volume = 20000
     end
 
     if toBeCreated > 65 and toBeCreated <= 85 then -- cruiser
-        print('Spawning new Wreck: Cruiser')
+        print('HIGH TRAFFIC SYSTEM // Spawning new Wreck: Cruiser')
+        volume = 15000
     end
 
     if toBeCreated > 15 and toBeCreated <= 65 then -- frigate
-        print('Spawning new Wreck: Frigate')
+        print('HIGH TRAFFIC SYSTEM // Spawning new Wreck: Frigate')
+        volume = 7500
     end
 
-    if toBeCreated <= 15 then -- transport
-        print('Spawning new Wreck: Transport')
+    if toBeCreated <= 15 then -- corvette
+        print('HIGH TRAFFIC SYSTEM // Spawning new Wreck: Corvette')
+        volume = 2500
     end
 
-    nextStep = 'scrapperStageTwo' -- always set the next event or nil
-end
-
-function events.scrapperStageTwo()
-    local delay = 5
-    if timer < delay then -- wait before continue
-        return
-    else
-        timer = 0
-    end
-
-    local goodbye = {
-        "kthxbye!",
-        "Fly safe.",
-        "o/ byebye"
-    }
-    Sector():broadcastChatMessage('Scrapper', 0, goodbye[math.random(1, #goodbye)])
+    local material = PlanGenerator.selectMaterial(faction)
+    local style = PlanGenerator.selectShipStyle(faction)
+    local plan = PlanGenerator.makeShipPlan(faction, volume, style, material)
+    generator:createUnstrippedWreckage(faction, plan)
 
     nextStep = nil -- always set the next event or nil
 end
