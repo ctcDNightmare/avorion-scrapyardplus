@@ -23,7 +23,7 @@ config.lifetimeExpBaseline = 7 -- [Default: 7] Base value of experience that's a
 
 -- high traffic system
 config.highTrafficChance = 0.3 -- [Default: 0.3] Chance that a discovered system is regenerative
-config.enableRegen = false -- [Default: true] Enable/Disable the regeneration of wrecks inside a system
+config.enableRegen = true -- [Default: true] Enable/Disable the regeneration of wrecks inside a system
 config.regenSpawntime = 15 -- [Default: 15] Time (in minutes) how often new event will start to spawn wrecks
 
 -- events
