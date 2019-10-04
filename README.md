@@ -44,7 +44,7 @@ config.lifetimeExpBaseline = 7 -- [Default: 7] Base value of experience that's a
 
 -- high traffic system
 config.highTrafficChance = 0.3 -- [Default: 0.3] Chance that a discovered system is regenerative
-config.enableRegen = false -- [Default: true] Enable/Disable the regeneration of wrecks inside a system
+config.enableRegen = true -- [Default: true] Enable/Disable the regeneration of wrecks inside a system
 config.regenSpawntime = 15 -- [Default: 15] Time (in minutes) how often new event will start to spawn wrecks
 
 -- events
@@ -54,11 +54,11 @@ config.disasterSpawnTime = 20 -- [Default: 30] Time (in minutes) how often it's 
 ```
 
 ## Screenshots
-*Solo player with good reputation*
-![Lone wolf with good relations](https://i.imgur.com/hp9nsGU.jpg)  
+*Solo player after getting his first license*  
+![Solo player after getting his first license](https://i.imgur.com/Gu3EqTQ.jpg)  
 
 *Alliance player with normal reputation*  
-![Alliance player with normal relations](https://i.imgur.com/KU8JH3A.jpg)  
+![Alliance player with normal relations](https://i.imgur.com/lUCRjTm.jpg)  
 
 *Nearly reached lifetime status but lost reputation before finishing it*  
 ![Nearly there!](https://i.imgur.com/8amcRQZ.jpg)
@@ -73,13 +73,12 @@ config.disasterSpawnTime = 20 -- [Default: 30] Time (in minutes) how often it's 
 - ~~split the license system into private & alliance so you can buy a personal one even if you are in an alliance~~
 - ~~flexible duration selection via slider~~
 - ~~lifetime license~~
-- regenerating wrecks / events to support lifetime licenses
-
-**Hint**: You can take a look at the regen/event system by enabling it in the configfile. It's still WIP
-
+- ~~regenerating wrecks / events to support lifetime licenses~~
+- polishing current implementation with more texts, events, interactions
 
 ## Feedback & Discussion
 http://www.avorion.net/forum/index.php/topic,3850.0.html
 
 ## Mentions & shoutouts
 - [Dirtyredz](https://github.com/dirtyredz) - He got me into modding for Avorion with his [MoveUI-Mod](http://www.avorion.net/forum/index.php/topic,3834.0.html) and now we are even working together on each others mods to further improve our knowledge
+- [slxsh](https://github.com/slxsh) - For creating the two license icons 

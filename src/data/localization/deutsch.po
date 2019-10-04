@@ -1,3 +1,9 @@
+msgid "Never (lifetime license)"
+msgstr "Nie (Lizenz auf Lebenszeit)"
+
+msgid "No license found."
+msgstr "Keine Lizenz gefunden."
+
 msgid "High Traffic Scrapyard"
 msgstr "Sehr stark genutzter Schrottplatz"
 
@@ -30,3 +36,26 @@ msgstr "Deine %s Abwracklizenz ist abgelaufen. Du darfst in dieser Gegend keine 
 
 msgid "Your %s salvaging license in %s expired. You may no longer salvage in this area."
 msgstr "Deine %s Abwracklizenz in %s ist abgelaufen. Due darfst in dieser Gegend keine Schiffe mehr abwracken."
+
+msgid "Battleship"
+msgstr "Schlachtschiff"
+
+msgid "Dreadnought"
+msgstr "Dreadnought"
+
+msgid "Destroyer"
+msgstr "Zerstörer"
+
+msgid "Cruiser"
+msgstr "Kreuzer"
+
+msgid "Frigate"
+msgstr "Fregatte"
+
+msgid "Corvette"
+msgstr "Korvette"
+
+msgid "Oh look, a %s wreck just got dropped off at my Scrapyard!"
+msgstr "Uh, schau mal. Ein %s Wrack wurde gerade angeliefert!"
+
+
