@@ -1,0 +1,59 @@
+msgid "Never (lifetime license)"
+msgstr "Никогда (пожизненная лицензия)"
+
+msgid "No license found."
+msgstr "Лицензия не найдена."
+
+msgid "High Traffic Scrapyard"
+msgstr "Свалка с высоким оборотом"
+
+msgid "Your %s salvaging license will run out in %s."
+msgstr "Твоя %s утилизационная лицензия закончится через %s."
+
+msgid "Your %s salvaging license in %s will run out in %s."
+msgstr "Твоя %s утилизационная лицензия в %s закончится через %s."
+
+msgid "Your %s salvaging license will run out in %s. Renew it NOW and save yourself some trouble!"
+msgstr "Твоя %s утилизационная лицензия закончится через %s. Обнови её СЕЙЧАС и избавь себя от забот!"
+
+msgid "Your %s salvaging license in %s will run out in %s. Renew it NOW and save yourself some trouble!"
+msgstr "Твоя %s утилизационная лицензия в %s закончится через %s. Обнови её СЕЙЧАС и избавь себя от забот!"
+
+msgid "Your %s salvaging license will run out in %s. Renew it immediately and save yourself some trouble!"
+msgstr "Твоя %s утилизационная лицензия закончится через %s. Обнови её немедленно и избавь себя от забот!"
+
+msgid "Your %s salvaging license in %s will run out in %s. Renew it immediately and save yourself some trouble!"
+msgstr "Твоя %s утилизационная лицензия в %s закончится через %s. Обнови её немедленно и избавь себя от забот!"
+
+msgid "Your %s salvaging license will run out in %s. Don't forget to renew it in time!"
+msgstr "Твоя %s утилизационная лицензия закончится через %s. Не забудь её вовремя обновить!"
+
+msgid "Your %s salvaging license in %s will run out in %s. Don't forget to renew it in time!"
+msgstr "Твоя %s утилизационная лицензия в %s закончится через %s. Не забудь её вовремя обновить!"
+
+msgid "Your %s salvaging license expired. You may no longer salvage in this area."
+msgstr "Твоя %s утилизационная лицензия закончилась. Ты больше не можешь утилизировать корабли в этом районе."
+
+msgid "Your %s salvaging license in %s expired. You may no longer salvage in this area."
+msgstr "Твоя %s утилизационная лицензия в %s закончилась. Ты больше не можешь утилизировать корабли в этом районе."
+
+msgid "Battleship"
+msgstr "Линкор"
+
+msgid "Dreadnought"
+msgstr "Дредноут"
+
+msgid "Destroyer"
+msgstr "Эсминец"
+
+msgid "Cruiser"
+msgstr "Крейсер"
+
+msgid "Frigate"
+msgstr "Фрегат"
+
+msgid "Corvette"
+msgstr "Корвет"
+
+msgid "Oh look, a %s wreck just got dropped off at my Scrapyard!"
+msgstr "О, гляди! Ко мне на металлолом попал %s!"
