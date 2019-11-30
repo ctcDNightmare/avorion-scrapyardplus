@@ -81,4 +81,8 @@ http://www.avorion.net/forum/index.php/topic,3850.0.html
 
 ## Mentions & shoutouts
 - [Dirtyredz](https://github.com/dirtyredz) - He got me into modding for Avorion with his [MoveUI-Mod](http://www.avorion.net/forum/index.php/topic,3834.0.html) and now we are even working together on each others mods to further improve our knowledge
-- [slxsh](https://github.com/slxsh) - For creating the two license icons 
+- [slxsh](https://github.com/slxsh) - For creating the two license icons
+- [bariskisir](https://github.com/bariskisir) - For adding the turkish translation
+- [OleksiyRudenko](https://github.com/OleksiyRudenko) - For adding the russian translation
+- [Balkoth](https://github.com/Balkoth) - For adding the french translation
+ 
