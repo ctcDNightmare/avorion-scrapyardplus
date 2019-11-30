@@ -1,4 +1,7 @@
-#### Version 2.1.0 *"immunogenetical-transfashion"
+#### Version 2.1.1 *"unreasoned-resegregation"*
+* update version constraint to be compatbiel with 0.28
+
+#### Version 2.1.0 *"immunogenetical-transfashion"*
 * fix issues with alliance license
 * add spawning of new wrecks in high-traffic systems (*finally!*)
 * add new icons for solo & alliance licenses

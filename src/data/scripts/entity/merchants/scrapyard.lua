@@ -39,7 +39,7 @@ function Scrapyard.onShowWindow()
     if not ship then return end
 
     -- get the plan of the player's ship
-    local plan = ship:getPlan()
+    local plan = ship:getFullPlanCopy()
     planDisplayer.plan = plan
 
     if ship.isDrone then
