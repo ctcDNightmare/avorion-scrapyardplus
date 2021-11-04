@@ -1,0 +1,59 @@
+msgid "Never (lifetime license)"
+msgstr "Nooit (levenslange licentie)"
+
+msgid "No license found."
+msgstr "Geen licentie gevonden."
+
+msgid "High Traffic Scrapyard"
+msgstr "Hoge Intensiteit Sloperij"
+
+msgid "Your %s salvaging license will run out in %s."
+msgstr "Uw %s bergingslicentie verloopt over %s."
+
+msgid "Your %s salvaging license in %s will run out in %s."
+msgstr "Uw %s bergingslicentie in %s zal verlopen in %s."
+
+msgid "Your %s salvaging license will run out in %s. Renew it NOW and save yourself some trouble!"
+msgstr "Uw %s bergingslicentie verloopt over %s. Verleng ze NU om jezelf problemen te besparen!"
+
+msgid "Your %s salvaging license in %s will run out in %s. Renew it NOW and save yourself some trouble!"
+msgstr "Uw %s bergingslicentie in %s zal verlopen in %s. Verleng ze NU om jezelf problemen te besparen!"
+
+msgid "Your %s salvaging license will run out in %s. Renew it immediately and save yourself some trouble!"
+msgstr "Uw %s bergingslicentie verloopt over %s. Verleng het onmiddellijk en bespaar jezelf wat moeite!"
+
+msgid "Your %s salvaging license in %s will run out in %s. Renew it immediately and save yourself some trouble!"
+msgstr "Uw %s bergingslicentie in %s zal verlopen in %s. Verleng het onmiddellijk en bespaar jezelf wat moeite!"
+
+msgid "Your %s salvaging license will run out in %s. Don't forget to renew it in time!"
+msgstr "Uw %s bergingslicentie verloopt over %s. Vergeet deze niet op tijd te vernieuwen!"
+
+msgid "Your %s salvaging license in %s will run out in %s. Don't forget to renew it in time!"
+msgstr "Uw %s bergingslicentie in %s zal verlopen in %s. Vergeet deze niet op tijd te vernieuwen!"
+
+msgid "Your %s salvaging license expired. You may no longer salvage in this area."
+msgstr "Uw %s bergingslicentie is verlopen. U mag in dit gebied geen schepen meer bergen."
+
+msgid "Your %s salvaging license in %s expired. You may no longer salvage in this area."
+msgstr "Uw %s bergingslicentie in %s is verlopen.. U mag in dit gebied geen schepen meer bergen."
+
+msgid "Battleship"
+msgstr "Slagschip"
+
+msgid "Dreadnought"
+msgstr "Dreadnought"
+
+msgid "Destroyer"
+msgstr "Torpedojager"
+
+msgid "Cruiser"
+msgstr "Kruiser"
+
+msgid "Frigate"
+msgstr "Fregat"
+
+msgid "Corvette"
+msgstr "Korvet"
+
+msgid "Oh look, a %s wreck just got dropped off at my Scrapyard!"
+msgstr "Oh kijk, een %s wrak is zojuist gedropt bij mijn Sloperij!"
